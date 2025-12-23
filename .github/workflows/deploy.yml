@@ -1,0 +1,67 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            cd /var/www/sharaa-dates-whatsapp-server
+            
+            echo "📦 Pulling latest code..."
+            git pull origin main
+            
+            echo "📋 Installing dependencies..."
+            npm install
+            
+            echo "🔄 Restarting PM2 application..."
+            pm2 restart sharaa-whatsapp-server --update-env
+            
+            echo "📊 Current PM2 status:"
+            pm2 list
+            
+            echo "⏳ Waiting for application to start..."
+            sleep 5
+            
+            # Check if application is online
+            if pm2 show sharaa-whatsapp-server | grep -q "online"; then
+              echo "✅ Application is online!"
+              
+              # Show recent logs to verify successful startup
+              echo "📋 Recent application logs:"
+              pm2 logs sharaa-whatsapp-server --lines 25 --nostream
+              
+              # Check for common success indicators in logs
+              echo "🔍 Checking for startup success indicators..."
+              if pm2 logs sharaa-whatsapp-server --lines 20 --nostream | grep -E "(listening|connected|started|ready)" > /dev/null; then
+                echo "✅ Deployment successful - Application appears to be running correctly"
+              else
+                echo "⚠️  Application is online but no startup success indicators found in logs"
+                echo "📋 Full recent logs:"
+                pm2 logs sharaa-whatsapp-server --lines 100 --nostream
+              fi
+              
+            else
+              echo "❌ Deployment failed - Application not online"
+              echo "📊 PM2 status:"
+              pm2 show sharaa-whatsapp-server
+              
+              echo "📋 Error logs:"
+              pm2 logs sharaa-whatsapp-server --err --lines 50 --nostream
+              
+              echo "📋 Full logs:"
+              pm2 logs sharaa-whatsapp-server --lines 100 --nostream
+              
+              exit 1
+            fi
