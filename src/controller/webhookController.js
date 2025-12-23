@@ -95,7 +95,6 @@ exports.postHandler = async (req, res) => {
 
             await sendToWhatsapp.sendToWhatsapp(wellcomeData);
 
-
           }
 
           else if (
