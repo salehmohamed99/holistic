@@ -30,14 +30,14 @@ exports.postHandler = async (req, res) => {
         req.body.entry[0].changes[0].value.messages) {
         let from = req.body.entry[0].changes[0].value.messages[0].from; // extract the phone number from the webhook payload
 
-        let shara = await OrderID.findOne({ from });
+        let holistic = await OrderID.findOne({ from });
 
-        if (shara == null) {
-          shara = new OrderID({ from, chat: "of" });
-          await shara.save();
+        if (holistic == null) {
+          holistic = new OrderID({ from, chat: "of" });
+          await holistic.save();
         }
 
-        if (shara.chat == "of") {
+        if (holistic.chat == "of") {
           if (
             req.body.entry[0].changes[0].value.messaging_product &&
             req.body.entry[0].changes[0].value.messages &&
@@ -50,50 +50,67 @@ exports.postHandler = async (req, res) => {
               ? req.body.entry[0].changes[0].value.messages[0].context.id
               : null;
 
-            shara = await OrderID.findOneAndUpdate(
-              { from: from },
-              {
-                $set: {
-                  wa_msg_id: wa_msg_id,
-                  order_date: "",
-                  order_time: "",
-                  card: [],
-                  choosen_address: "",
-                  isGift: false,
-                  is_delivery: false,
-                  delivery_price: "",
-                  is_now: false,
-                  total_price: "",
-                  order_id: "",
-                  address: "",
-                  branch_id: "",
-                  offers: [],
-                  offers_counter: 0,
-                  to_verified: false,
-                  country_code: "",
-                  phone: "",
-                  items_counter: 0,
-                  status: "",
-                  init_card_counter: 0,
-                  init_card: [],
-                  items_length: 0,
-                  tax: 0,
-                  total: 0,
-                  same_card: 0,
+            if (
+              req.body.entry[0].changes[0].value.messages[0].text.body == "تقييم"
+            ) {
+
+              const wellcomeData = {
+                from: "00",
+                to: from,
+                phone_number: from,
+                type: "start_service",
+              };
+
+              sendToWhatsapp.sendToWhatsapp(wellcomeData);
+            } else {
+              holistic = await OrderID.findOneAndUpdate(
+                { from: from },
+                {
+                  $set: {
+                    wa_msg_id: wa_msg_id,
+                    order_date: "",
+                    order_time: "",
+                    card: [],
+                    choosen_address: "",
+                    isGift: false,
+                    is_delivery: false,
+                    delivery_price: "",
+                    is_now: false,
+                    total_price: "",
+                    order_id: "",
+                    address: "",
+                    branch_id: "",
+                    offers: [],
+                    offers_counter: 0,
+                    to_verified: false,
+                    country_code: "",
+                    phone: "",
+                    items_counter: 0,
+                    status: "",
+                    init_card_counter: 0,
+                    init_card: [],
+                    items_length: 0,
+                    tax: 0,
+                    total: 0,
+                    same_card: 0,
+                  },
                 },
-              },
-              { new: true, upsert: true }
-            );
+                { new: true, upsert: true }
+              );
 
-            const wellcomeData = {
-              from: "00",
-              to: from,
-              phone_number: from,
-              parentMsg: wa_msg_id,
-              type: "select_language",
-            };
+              const wellcomeData = {
+                from: "00",
+                to: from,
+                phone_number: from,
+                parentMsg: wa_msg_id,
+                type: "select_language",
+              };
 
-            await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+            }
+
+
+
 
           }
 
@@ -109,9 +126,9 @@ exports.postHandler = async (req, res) => {
             let product_items =
               req.body.entry[0].changes[0].value.messages[0].order.product_items;
 
-            let shara = await OrderID.findOne({ from });
+            let holistic = await OrderID.findOne({ from });
 
-            if (shara.status == "choose_items") {
+            if (holistic.status == "choose_items") {
               const wellcomeData = {
                 from: "00",
                 to: from,
@@ -123,45 +140,45 @@ exports.postHandler = async (req, res) => {
             } else {
               console.log("no token bloc");
 
-              try {
-                shara = await OrderID.findOneAndUpdate(
-                  { from: from },
-                  {
-                    $set: {
-                      wa_msg_id: wa_msg_id,
-                      order_date: "",
-                      order_time: "",
-                      card: [],
-                      choosen_address: "",
-                      isGift: false,
-                      is_delivery: false,
-                      delivery_price: "",
-                      is_now: false,
-                      total_price: "",
-                      order_id: "",
-                      address: "",
-                      branch_id: "",
-                      offers: [],
-                      offers_counter: 0,
-                      to_verified: false,
-                      country_code: "",
-                      phone: "",
-                      items_counter: 0,
-                      status: "",
-                      init_card_counter: 0,
-                      init_card: [],
-                      items_length: 0,
-                      tax: 0,
-                      total: 0,
-                      same_card: 0,
-                    },
-                  },
-                  { new: true, upsert: true }
-                );
-                console.log("✅ shara updated/created:", shara);
-              } catch (err) {
-                console.error("❌ Error in findOneAndUpdate:", err);
-              }
+              // try {
+              //   holistic = await OrderID.findOneAndUpdate(
+              //     { from: from },
+              //     {
+              //       $set: {
+              //         wa_msg_id: wa_msg_id,
+              //         order_date: "",
+              //         order_time: "",
+              //         card: [],
+              //         choosen_address: "",
+              //         isGift: false,
+              //         is_delivery: false,
+              //         delivery_price: "",
+              //         is_now: false,
+              //         total_price: "",
+              //         order_id: "",
+              //         address: "",
+              //         branch_id: "",
+              //         offers: [],
+              //         offers_counter: 0,
+              //         to_verified: false,
+              //         country_code: "",
+              //         phone: "",
+              //         items_counter: 0,
+              //         status: "",
+              //         init_card_counter: 0,
+              //         init_card: [],
+              //         items_length: 0,
+              //         tax: 0,
+              //         total: 0,
+              //         same_card: 0,
+              //       },
+              //     },
+              //     { new: true, upsert: true }
+              //   );
+              //   console.log("✅ holistic updated/created:", holistic);
+              // } catch (err) {
+              //   console.error("❌ Error in findOneAndUpdate:", err);
+              // }
 
               const wellcomeData = {
                 from: "00",
@@ -172,7 +189,7 @@ exports.postHandler = async (req, res) => {
               };
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
 
-              // if (shara.language === 'ar') {
+              // if (holistic.language === 'ar') {
               //   const wellcomeData = {
               //     from: "00",
               //     to: from,
@@ -216,18 +233,9 @@ exports.postHandler = async (req, res) => {
               };
 
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-            } else if (title == "حذف / إضافات" || title == "Delete / Additions") {
-              const wellcomeData = {
-                from: "00",
-                to: from,
-                phone_number: from,
-                type: "edit_option",
-              };
-
-              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (title == "حذف منتج" || title == "Delete a product") {
-              shara.status = "delete_item";
-              await shara.save();
+              holistic.status = "delete_item";
+              await holistic.save();
 
               const wellcomeData = {
                 from: "00",
@@ -238,7 +246,7 @@ exports.postHandler = async (req, res) => {
 
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (title == "إستمرار" || title == "continuation") {
-              if (shara.addresses.length > 0) {
+              if (holistic.addresses.length > 0) {
                 const wellcomeData = {
                   from: "00",
                   to: from,
@@ -279,8 +287,8 @@ exports.postHandler = async (req, res) => {
 
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (title == "إختيار عنوان" || title == "Choose address") {
-              shara.status = "choose_address";
-              await shara.save();
+              holistic.status = "choose_address";
+              await holistic.save();
               const wellcomeData = {
                 from: "00",
                 to: from,
@@ -290,8 +298,8 @@ exports.postHandler = async (req, res) => {
 
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (title == "حذف عنوان" || title == "Delete address") {
-              shara.status = "delete_address";
-              await shara.save();
+              holistic.status = "delete_address";
+              await holistic.save();
               const wellcomeData = {
                 from: "00",
                 to: from,
@@ -301,8 +309,8 @@ exports.postHandler = async (req, res) => {
 
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (title == "العربيه") {
-              shara.language = "ar";
-              await shara.save();
+              holistic.language = "ar";
+              await holistic.save();
 
               const wellcomeData = {
                 from: "00",
@@ -313,8 +321,8 @@ exports.postHandler = async (req, res) => {
 
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (title == "English") {
-              shara.language = "en";
-              await shara.save();
+              holistic.language = "en";
+              await holistic.save();
               const wellcomeData = {
                 from: "00",
                 to: from,
@@ -324,9 +332,9 @@ exports.postHandler = async (req, res) => {
 
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (title == "خدمة العملاء" || title == "customer service") {
-              shara.chat = "on";
-              await shara.save();
-              if (shara.language === "ar") {
+              holistic.chat = "on";
+              await holistic.save();
+              if (holistic.language === "ar") {
                 const wellcomeData = {
                   from: "00",
                   to: from,
@@ -364,26 +372,15 @@ exports.postHandler = async (req, res) => {
                 await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
               }
             } else if (
-              title == "تسوق عبر الواتساب" ||
-              title == "WhatsApp Shopping"
-            ) {
-              const wellcomeData = {
-                from: "00",
-                to: from,
-                phone_number: from,
-                type: "sign_in_flow",
-              };
-              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-            } else if (
-              title == "تصفح الكتالوج" ||
-              title == "Browse Catalog"
+              title == "تصفح الكتالوج" || title == "Browse Catalog"
+              || title == "تسوق عبر الواتساب" || title == "WhatsApp Shopping"
             ) {
               const wellcomeData2 = {
                 from: "00",
                 to: from,
                 phone_number: from,
                 content:
-                  shara.language === "ar"
+                  holistic.language === "ar"
                     ? "يرجى الانتظار قليلا الى حين تجهيز البيانات"
                     : "Please wait a little while the data is being processed.",
                 type: "text",
@@ -414,7 +411,7 @@ exports.postHandler = async (req, res) => {
                 to: from,
                 phone_number: from,
                 content:
-                  shara.language === "ar"
+                  holistic.language === "ar"
                     ? "يرجى الانتظار قليلا الى حين تجهيز بيانات المحل"
                     : "Please wait a moment while the store data is being processed.",
                 type: "text",
@@ -430,13 +427,13 @@ exports.postHandler = async (req, res) => {
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (
               title == "المزيد عن الشرع" ||
-              title == "More about Shara"
+              title == "More about holistic"
             ) {
               const wellcomeData = {
                 from: "00",
                 to: from,
                 phone_number: from,
-                type: "more_about_shara",
+                type: "more_about_holistic",
               };
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (
@@ -444,9 +441,9 @@ exports.postHandler = async (req, res) => {
               title == "Online shopping"
             ) {
               const content =
-                shara.language === "ar"
-                  ? "*يمكنك التسوق عبر متجرنا الإلكترونى من خلال الرابط التالى* \n https://alsharashoping.com"
-                  : "*You can shop through our online store through the following link* \n https://alsharashoping.com";
+                holistic.language === "ar"
+                  ? "*يمكنك التسوق عبر متجرنا الإلكترونى من خلال الرابط التالى* \n https://alholisticshoping.com"
+                  : "*You can shop through our online store through the following link* \n https://alholisticshoping.com";
 
               const wellcomeData = {
                 from: "00",
@@ -469,13 +466,13 @@ exports.postHandler = async (req, res) => {
             let title =
               req.body.entry[0].changes[0].value.messages[0].button.text;
 
-            if (shara.status == "choose_items") {
+            if (holistic.status == "choose_items") {
               if (
                 title == "عرض منتجات زيت الزيتون" ||
                 title == "Display Olive Oil Products"
               ) {
-                shara.category_id = "498";
-                await shara.save();
+                holistic.category_id = "498";
+                await holistic.save();
 
                 const wellcomeData = {
                   from: "00",
@@ -489,8 +486,8 @@ exports.postHandler = async (req, res) => {
                 title == "عرض منتجات المكسرات" ||
                 title == "Display Nuts Products"
               ) {
-                shara.category_id = "468";
-                await shara.save();
+                holistic.category_id = "468";
+                await holistic.save();
 
                 const wellcomeData = {
                   from: "00",
@@ -504,8 +501,8 @@ exports.postHandler = async (req, res) => {
                 title == "عرض منتجات القهوة" ||
                 title == "Display Coffee Products"
               ) {
-                shara.category_id = "452";
-                await shara.save();
+                holistic.category_id = "452";
+                await holistic.save();
 
                 const wellcomeData = {
                   from: "00",
@@ -519,8 +516,8 @@ exports.postHandler = async (req, res) => {
                 title == "عرض منتجات الطحينة" ||
                 title == "Display Tahini Products"
               ) {
-                shara.category_id = "465";
-                await shara.save();
+                holistic.category_id = "465";
+                await holistic.save();
 
                 const wellcomeData = {
                   from: "00",
@@ -534,8 +531,8 @@ exports.postHandler = async (req, res) => {
                 title == "عرض الزيوت العلاجية" ||
                 title == "Display Therapeutic Oils"
               ) {
-                shara.category_id = "462";
-                await shara.save();
+                holistic.category_id = "462";
+                await holistic.save();
 
                 const wellcomeData = {
                   from: "00",
@@ -549,8 +546,8 @@ exports.postHandler = async (req, res) => {
                 title == "عرض منتجات البهارات" ||
                 title == "Display Spices Products"
               ) {
-                shara.category_id = "463";
-                await shara.save();
+                holistic.category_id = "463";
+                await holistic.save();
 
                 const wellcomeData = {
                   from: "00",
@@ -564,8 +561,8 @@ exports.postHandler = async (req, res) => {
                 title == "عرض منتجات الطحين بأنواعه" ||
                 title == "Display Flour Products"
               ) {
-                shara.category_id = "499";
-                await shara.save();
+                holistic.category_id = "499";
+                await holistic.save();
 
                 const wellcomeData = {
                   from: "00",
@@ -579,8 +576,8 @@ exports.postHandler = async (req, res) => {
                 title == "عرض منتجات التمور والدبس" ||
                 title == "Display of Dates and Molasses Products"
               ) {
-                shara.category_id = "478";
-                await shara.save();
+                holistic.category_id = "478";
+                await holistic.save();
 
                 const wellcomeData = {
                   from: "00",
@@ -594,8 +591,8 @@ exports.postHandler = async (req, res) => {
                 title == "عرض المنتجات الزراعية" ||
                 title == "Display Agricultural Products"
               ) {
-                shara.category_id = "446";
-                await shara.save();
+                holistic.category_id = "446";
+                await holistic.save();
 
                 const wellcomeData = {
                   from: "00",
@@ -609,8 +606,8 @@ exports.postHandler = async (req, res) => {
                 title == "عرض منتجات العروض" ||
                 title == "Show Offers Products"
               ) {
-                // shara.category_id = "498";
-                // await shara.save();
+                // holistic.category_id = "498";
+                // await holistic.save();
 
                 const wellcomeData = {
                   from: "00",
@@ -647,7 +644,7 @@ exports.postHandler = async (req, res) => {
                 });
               }
             } else {
-              if (shara.language === "ar") {
+              if (holistic.language === "ar") {
                 const wellcomeData = {
                   from: "00",
                   to: from,
@@ -692,11 +689,11 @@ exports.postHandler = async (req, res) => {
               response_json.flow_token === "1743409142729679" ||
               response_json.flow_token === "854659986604079"
             ) {
-              shara.to_verified = true;
-              shara.country_code = response_json.country_code;
-              shara.phone = response_json.phone;
-              shara.name = response_json.name;
-              await shara.save();
+              holistic.to_verified = true;
+              holistic.country_code = response_json.country_code;
+              holistic.phone = response_json.phone;
+              holistic.name = response_json.name;
+              await holistic.save();
 
               const wellcomeData = {
                 from: "00",
@@ -708,13 +705,13 @@ exports.postHandler = async (req, res) => {
               };
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (
-              response_json.flow_token === "1966101247184957" ||
+              response_json.flow_token === "1724539328502091" ||
               response_json.flow_token === "3754004011582057"
             ) {
-              shara.to_verified = true;
-              shara.country_code = response_json.country_code;
-              shara.phone = response_json.phone;
-              await shara.save();
+              holistic.to_verified = true;
+              holistic.country_code = response_json.country_code;
+              holistic.phone = response_json.phone;
+              await holistic.save();
 
               const wellcomeData = {
                 from: "00",
@@ -744,9 +741,9 @@ exports.postHandler = async (req, res) => {
             ) {
               const id = response_json.categories;
               if (id == "1") {
-                shara.chat = "on";
-                await shara.save();
-                if (shara.language === "ar") {
+                holistic.chat = "on";
+                await holistic.save();
+                if (holistic.language === "ar") {
                   const wellcomeData = {
                     from: "00",
                     to: from,
@@ -800,7 +797,7 @@ exports.postHandler = async (req, res) => {
                   to: from,
                   phone_number: from,
                   content:
-                    shara.language === "ar"
+                    holistic.language === "ar"
                       ? "يرجى الانتظار قليلا الى حين تجهيز بيانات المحل"
                       : "Please wait a moment while the store data is being processed.",
                   type: "text",
@@ -855,20 +852,20 @@ exports.postHandler = async (req, res) => {
               };
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (
-              response_json.flow_token === "1066240944918344" ||
+              response_json.flow_token === "755127513661641" ||
               response_json.flow_token === "1154420158993406"
             ) {
-              let length = shara.address_counter;
+              let length = holistic.address_counter;
               const newAddress = {
                 id: `${length + 1}`,
                 name: response_json.name,
                 email: response_json.email,
                 country: response_json.countries,
               };
-              shara.choosen_address = `${length + 1}`;
-              shara.addresses.push(newAddress);
-              shara.address_counter++;
-              await shara.save();
+              holistic.choosen_address = `${length + 1}`;
+              holistic.addresses.push(newAddress);
+              holistic.address_counter++;
+              await holistic.save();
 
               const wellcomeData = {
                 from: "00",
@@ -880,19 +877,19 @@ exports.postHandler = async (req, res) => {
               };
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (
-              response_json.flow_token === "1030692605325396" ||
+              response_json.flow_token === "2246968399158766" ||
               response_json.flow_token === "1198325044769888"
             ) {
               let country;
-              for (let index = 0; index < shara.addresses.length; index++) {
-                const element = shara.addresses[index];
+              for (let index = 0; index < holistic.addresses.length; index++) {
+                const element = holistic.addresses[index];
                 if (element.id == response_json.address_id) {
                   element.state = response_json.states;
                   country = element.country;
                   element.street = response_json.street
                     ? response_json.street
                     : "";
-                  await shara.save();
+                  await holistic.save();
                   break;
                 }
               }
@@ -908,20 +905,20 @@ exports.postHandler = async (req, res) => {
               };
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (
-              response_json.flow_token === "949185723888828" ||
+              response_json.flow_token === "4137540806459509" ||
               response_json.flow_token === "819689473328032"
             ) {
               let state;
               let city;
 
-              if (shara.status == "delete_address") {
-                for (let index = 0; index < shara.addresses.length; index++) {
-                  const element = shara.addresses[index];
+              if (holistic.status == "delete_address") {
+                for (let index = 0; index < holistic.addresses.length; index++) {
+                  const element = holistic.addresses[index];
                   if (element.id == response_json.address) {
                     console.log("Document 555555555555.");
-                    shara.addresses.splice(shara.addresses.indexOf(element), 1);
-                    await shara.save();
-                    if (shara.language === "ar") {
+                    holistic.addresses.splice(holistic.addresses.indexOf(element), 1);
+                    await holistic.save();
+                    if (holistic.language === "ar") {
                       const wellcomeData = {
                         from: "00",
                         to: from,
@@ -945,9 +942,9 @@ exports.postHandler = async (req, res) => {
                   }
                 }
 
-                if (!shara.addresses || shara.addresses.length === 0) {
-                  shara.status = "add_address";
-                  await shara.save();
+                if (!holistic.addresses || holistic.addresses.length === 0) {
+                  holistic.status = "add_address";
+                  await holistic.save();
                   const wellcomeData = {
                     from: "00",
                     to: from,
@@ -956,8 +953,8 @@ exports.postHandler = async (req, res) => {
                   };
                   await sendToWhatsapp.sendToWhatsapp(wellcomeData);
                 } else {
-                  shara.status = "address";
-                  await shara.save();
+                  holistic.status = "address";
+                  await holistic.save();
                   const wellcomeData = {
                     from: "00",
                     to: from,
@@ -967,8 +964,8 @@ exports.postHandler = async (req, res) => {
                   await sendToWhatsapp.sendToWhatsapp(wellcomeData);
                 }
               } else {
-                shara.choosen_address = response_json.address;
-                await shara.save();
+                holistic.choosen_address = response_json.address;
+                await holistic.save();
 
                 const wellcomeData = {
                   from: "00",
@@ -982,8 +979,8 @@ exports.postHandler = async (req, res) => {
               response_json.flow_token === "453393884363277" ||
               response_json.flow_token === "1020093872759925"
             ) {
-              shara.subcategory_id = response_json.subcategories;
-              await shara.save();
+              holistic.subcategory_id = response_json.subcategories;
+              await holistic.save();
 
               const wellcomeData = {
                 from: "00",
@@ -1033,9 +1030,9 @@ exports.postHandler = async (req, res) => {
               response_json.flow_token === "431604453281835" ||
               response_json.flow_token === "951518313665963"
             ) {
-              if (shara.status == "choose_items") {
-                shara.category_id = response_json.categories;
-                await shara.save();
+              if (holistic.status == "choose_items") {
+                holistic.category_id = response_json.categories;
+                await holistic.save();
 
                 if (response_json.categories == "110000") {
                   const wellcomeData = {
@@ -1056,7 +1053,7 @@ exports.postHandler = async (req, res) => {
                   await sendToWhatsapp.sendToWhatsapp(wellcomeData);
                 }
               } else {
-                if (shara.language === "ar") {
+                if (holistic.language === "ar") {
                   const wellcomeData = {
                     from: "00",
                     to: from,
@@ -1095,9 +1092,9 @@ exports.postHandler = async (req, res) => {
               req.body.entry[0].changes[0].value.messages[0].text.body == "Active"
             ) {
 
-              shara.chat = "of";
-              await shara.save();
-              if (shara.language === 'ar') {
+              holistic.chat = "of";
+              await holistic.save();
+              if (holistic.language === 'ar') {
                 const wellcomeData2 = {
                   from: "00",
                   to: from,

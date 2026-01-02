@@ -18,10 +18,11 @@ exports.sendToWhatsapp = async (inputData) => {
   );
 
   const url =
-    "https://graph.facebook.com/v12.0/" +
+    "https://graph.facebook.com/v22.0/" +
     WHATSAPP_PHONE_NUMBER_ID +
     "/messages?access_token=" +
     WHATSAPP_TOKEN;
+  console.log("WhatsApp API URL:", url);
 
   let data = {};
 
@@ -35,6 +36,7 @@ exports.sendToWhatsapp = async (inputData) => {
       filename: inputData.filename,
     };
 
+    console.log("Payload:", JSON.stringify(data, null, 2));
     const wa_res = await axiosHelper.post(url, data);
   } else if (inputData.type === "text") {
     data.to = inputData.to.toString();
@@ -52,7 +54,7 @@ exports.sendToWhatsapp = async (inputData) => {
         message_id: inputData.parentMsg,
       };
     }
-    console.log({ data }, "teeeeeeeeeeeeeeest");
+    console.log("Payload:", JSON.stringify(data, null, 2));
     const wa_res = await axiosHelper.post(url, data);
   } else if (inputData.type === "pdf") {
     data.to = inputData.to.toString();
@@ -169,7 +171,7 @@ exports.sendToWhatsapp = async (inputData) => {
 
     // });
   } else if (inputData.type === "sign_in_flow") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let phone = inputData.phone_number;
     let country_code;
     let new_phone_without_code;
@@ -188,7 +190,7 @@ exports.sendToWhatsapp = async (inputData) => {
     data.recipient_type = "individual";
     data.to = inputData.to;
 
-    if (shara.language === 'ar') {
+    if (holistic.language === 'ar') {
       data.interactive = {
         type: "flow",
         body: {
@@ -200,15 +202,15 @@ exports.sendToWhatsapp = async (inputData) => {
             // mode: "draft",
             mode: "published",
             flow_message_version: "3",
-            flow_token: shara.name === '' ? "1743409142729679" : "1966101247184957",
-            flow_id: shara.name === '' ? "1743409142729679" : "1966101247184957",
+            flow_token: holistic.name === '' ? "1743409142729679" : "1724539328502091",
+            flow_id: holistic.name === '' ? "1743409142729679" : "1724539328502091",
             flow_cta: "تسجيل الدخول",
             flow_action: "navigate",
             flow_action_payload: {
               screen: "SIGN_IN",
               data: {
-                default_code: country_code,
-                default_phone: new_phone_without_code,
+                default_code: Number(country_code),
+                default_phone: Number(new_phone_without_code),
               },
             },
           },
@@ -227,8 +229,8 @@ exports.sendToWhatsapp = async (inputData) => {
             // mode: "draft",
             mode: "published",
             flow_message_version: "3",
-            flow_token: shara.name === '' ? "854659986604079" : "3754004011582057",
-            flow_id: shara.name === '' ? "854659986604079" : "3754004011582057",
+            flow_token: holistic.name === '' ? "854659986604079" : "3754004011582057",
+            flow_id: holistic.name === '' ? "854659986604079" : "3754004011582057",
             flow_cta: "Sign In",
             flow_action: "navigate",
             flow_action_payload: {
@@ -255,19 +257,19 @@ exports.sendToWhatsapp = async (inputData) => {
       console.log({ err });
     }
   } else if (inputData.type === "after_sign_in_flow") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
 
     let data = JSON.stringify({
       "code": "+" + inputData.country_code,
       "phone_number": inputData.phone,
-      "name": shara.name,
+      "name": holistic.name,
     });
 
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'https://alsharashoping.com/api/otp-signin',
+      url: 'https://holistic.nassatrading.com/api/otp-signin',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -297,30 +299,21 @@ exports.sendToWhatsapp = async (inputData) => {
         console.log(error);
       });
 
-    console.log({ data }, "teeeeeeeeeeeeeeest");
-    try {
-      const wa_res = await axiosHelper.post(url, data);
-      console.log("000000", {
-        wa_res: wa_res.data.messages[0],
-      });
-    } catch (err) {
-      console.log({ err });
-    }
   } else if (inputData.type === "confirm_otp") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
 
     let data = JSON.stringify({
       "code": "+" + inputData.country_code,
       "phone_number": inputData.phone,
       "otp": inputData.otp,
-      "name": shara.name,
+      "name": holistic.name,
     });
 
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'https://alsharashoping.com/api/otp-verify',
+      url: 'https://holistic.nassatrading.com/api/otp-verify',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -335,13 +328,13 @@ exports.sendToWhatsapp = async (inputData) => {
           console.log("Response status: 200 OK");
           console.log(JSON.stringify(response.data));
 
-          shara.token = response.data.token;
-          shara.to_verified = false;
-          shara.country_code = "";
-          shara.phone = "";
-          await shara.save();
+          holistic.token = response.data.token;
+          holistic.to_verified = false;
+          holistic.country_code = "";
+          holistic.phone = "";
+          await holistic.save();
 
-          if (shara.language === 'ar') {
+          if (holistic.language === 'ar') {
             const wellcomeData3 = {
               from: "00",
               to: inputData.to,
@@ -364,7 +357,7 @@ exports.sendToWhatsapp = async (inputData) => {
             await sendToWhatsapp.sendToWhatsapp(wellcomeData3);
           }
 
-          if (shara.card.length > 0) {
+          if (holistic.card.length > 0) {
             const wellcomeData2 = {
               from: "00",
               to: inputData.phone_number,
@@ -377,7 +370,7 @@ exports.sendToWhatsapp = async (inputData) => {
               from: "00",
               to: inputData.phone_number,
               phone_number: inputData.phone_number,
-              type: "show_categories",
+              type: "flow_catalog_display",
             };
             await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
 
@@ -410,7 +403,7 @@ exports.sendToWhatsapp = async (inputData) => {
       header: {
         type: "image",
         image: {
-          link: "https://cdn.glitch.global/e74a8780-9870-4414-a0db-bbe188920678/alshare%20Logo.jpg?v=1721478975899",
+          link: "https://whatsapi.muscatappstest.com/attachments/holistic_logo.png",
         },
       },
       body: {
@@ -436,14 +429,14 @@ exports.sendToWhatsapp = async (inputData) => {
       },
     };
 
-
-    console.log({ data }, "teeeeeeeeeeeeeeest");
+    console.log("Payload:", JSON.stringify(data, null, 2));
     try {
       const wa_res = await axiosHelper.post(url, data);
       console.log("000000", {
-        wa_res: wa_res.data.messages[0],
+        wa_res: wa_res.data?.messages?.[0],
       });
     } catch (err) {
+      console.log("Axios Error Response:", err?.response?.data);
       console.log({ err });
     }
     // });
@@ -462,13 +455,7 @@ exports.sendToWhatsapp = async (inputData) => {
         },
         action: {
           buttons: [
-            // {
-            //   type: "reply",
-            //   reply: {
-            //     id: "1",
-            //     title: "تسوق عبر الواتساب",
-            //   },
-            // },
+
             {
               type: "reply",
               reply: {
@@ -480,16 +467,23 @@ exports.sendToWhatsapp = async (inputData) => {
               type: "reply",
               reply: {
                 id: "2",
-                title: "التسوق الإلكتروني",
+                title: "تسوق عبر الواتساب",
               },
             },
-            {
-              type: "reply",
-              reply: {
-                id: "3",
-                title: "المزيد عن الشرع",
-              },
-            },
+            // {
+            //   type: "reply",
+            //   reply: {
+            //     id: "2",
+            //     title: "التسوق الإلكتروني",
+            //   },
+            // },
+            // {
+            //   type: "reply",
+            //   reply: {
+            //     id: "3",
+            //     title: "المزيد عن الشرع",
+            //   },
+            // },
           ],
         },
       };
@@ -502,13 +496,6 @@ exports.sendToWhatsapp = async (inputData) => {
         },
         action: {
           buttons: [
-            // {
-            //   type: "reply",
-            //   reply: {
-            //     id: "1",
-            //     title: "WhatsApp Shopping",
-            //   },
-            // },
             {
               type: "reply",
               reply: {
@@ -520,34 +507,42 @@ exports.sendToWhatsapp = async (inputData) => {
               type: "reply",
               reply: {
                 id: "2",
-                title: "Online shopping",
+                title: "WhatsApp Shopping",
               },
             },
-            {
-              type: "reply",
-              reply: {
-                id: "3",
-                title: "More about Shara",
-              },
-            },
+            // {
+            //   type: "reply",
+            //   reply: {
+            //     id: "2",
+            //     title: "Online shopping",
+            //   },
+            // },
+            // {
+            //   type: "reply",
+            //   reply: {
+            //     id: "3",
+            //     title: "More about holistic",
+            //   },
+            // },
           ],
         },
       };
     }
 
 
-    console.log({ data }, "teeeeeeeeeeeeeeest");
+    console.log("Payload:", JSON.stringify(data, null, 2));
     try {
       const wa_res = await axiosHelper.post(url, data);
       console.log("000000", {
-        wa_res: wa_res.data.messages[0],
+        wa_res: wa_res.data?.messages?.[0],
       });
     } catch (err) {
+      console.log("Axios Error Response:", err?.response?.data);
       console.log({ err });
     }
     // });
     // });
-  } else if (inputData.type === "more_about_shara") {
+  } else if (inputData.type === "more_about_holistic") {
     let pizza = await OrderID.findOne({ from: inputData.phone_number });
 
     data.type = "interactive";
@@ -633,7 +628,7 @@ exports.sendToWhatsapp = async (inputData) => {
     // });
     // });
   } else if (inputData.type === "show_category_meals") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
     let branch_meals = [];
     let product_items = [];
@@ -643,7 +638,7 @@ exports.sendToWhatsapp = async (inputData) => {
     let config2 = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: `https://alsharashoping.com/api/products?sub_category=${inputData.subcategory_id}&per_page=999`,
+      url: `https://holistic.nassatrading.com/api/products?sub_category=${inputData.subcategory_id}&per_page=999`,
       headers: {}
     };
 
@@ -659,7 +654,7 @@ exports.sendToWhatsapp = async (inputData) => {
 
     for (let i = 0; i < branch_meals.length; i++) {
       const meal = branch_meals[i];
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         const newRow = {
           "product_retailer_id": `${meal.id}`,
         };
@@ -676,8 +671,8 @@ exports.sendToWhatsapp = async (inputData) => {
 
     for (let i = 0; i < branch_meals.length; i++) {
       const meal = branch_meals[i];
-      if (meal.category.id == parseInt(shara.category_id)) {
-        if (shara.language === 'ar') {
+      if (meal.category.id == parseInt(holistic.category_id)) {
+        if (holistic.language === 'ar') {
           category_name = meal.category.fr_Category_Name;
         } else {
           category_name = meal.category.en_Category_Name;
@@ -707,7 +702,7 @@ exports.sendToWhatsapp = async (inputData) => {
 
 
     if (product_items.length == 0) {
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         const wellcomeData = {
           from: "00",
           to: inputData.phone_number,
@@ -732,7 +727,7 @@ exports.sendToWhatsapp = async (inputData) => {
         from: "00",
         to: inputData.phone_number,
         phone_number: inputData.phone_number,
-        category_id: shara.category_id,
+        category_id: holistic.category_id,
         type: "subcategories",
       };
       await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
@@ -774,8 +769,8 @@ exports.sendToWhatsapp = async (inputData) => {
       console.log(sections.length);
       console.log(JSON.stringify(sections));
 
-      shara.status = "choose_items";
-      await shara.save();
+      holistic.status = "choose_items";
+      await holistic.save();
 
       for (let i = 0; i < sections.length; i++) {
         const element = sections[i];
@@ -813,12 +808,12 @@ exports.sendToWhatsapp = async (inputData) => {
     // });
     // });
   } else if (inputData.type === "call_mpm") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
     data.type = "template";
     data.recipient_type = "individual";
     data.to = inputData.to;
-    if (shara.language === 'ar') {
+    if (holistic.language === 'ar') {
       data.template = {
         name: "flow_products",
         language: {
@@ -886,7 +881,7 @@ exports.sendToWhatsapp = async (inputData) => {
     // });
     // });
   } else if (inputData.type === "save_cataloge_items") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let branch_meals;
     let added = 0;
     let quantity = 0;
@@ -895,7 +890,7 @@ exports.sendToWhatsapp = async (inputData) => {
     let config2 = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: `https://alsharashoping.com/api/products?category=${shara.category_id}&per_page=999`,
+      url: `https://holistic.nassatrading.com/api/products?category=${holistic.category_id}&per_page=999`,
       headers: {}
     };
 
@@ -915,28 +910,28 @@ exports.sendToWhatsapp = async (inputData) => {
         const meal = branch_meals[m];
         let item_id;
 
-        if (shara.language === 'en') {
+        if (holistic.language === 'en') {
           item_id = item.product_retailer_id.slice(0, -3);
         } else {
           item_id = item.product_retailer_id;
         }
 
         if (parseInt(item_id) === meal.id) {
-          const existingItem = shara.card.find(cardItem => cardItem.meal_id === meal.id.toString());
+          const existingItem = holistic.card.find(cardItem => cardItem.meal_id === meal.id.toString());
 
           if (existingItem) {
             console.log("Item exists in card");
             console.log(existingItem);
 
             existingItem.quantity += parseInt(item.quantity);
-            shara.markModified('card');
+            holistic.markModified('card');
           } else {
             console.log("Item does not exist in card");
             console.log(item.quantity);
             let cardItem;
-            if (shara.language === 'ar') {
+            if (holistic.language === 'ar') {
               cardItem = {
-                id: shara.items_counter + 1,
+                id: holistic.items_counter + 1,
                 meal_id: `${meal.id}`,
                 quantity: parseInt(item.quantity),
                 meal_name: `${meal.fr_Product_Name}`,
@@ -944,7 +939,7 @@ exports.sendToWhatsapp = async (inputData) => {
               };
             } else {
               cardItem = {
-                id: shara.items_counter + 1,
+                id: holistic.items_counter + 1,
                 meal_id: `${meal.id}`,
                 quantity: parseInt(item.quantity),
                 meal_name: `${meal.en_Product_Name}`,
@@ -958,9 +953,9 @@ exports.sendToWhatsapp = async (inputData) => {
             // }
 
             console.log(cardItem);
-            shara.card.push(cardItem);
-            shara.items_counter++;
-            shara.items_length++;
+            holistic.card.push(cardItem);
+            holistic.items_counter++;
+            holistic.items_length++;
 
           }
 
@@ -969,10 +964,10 @@ exports.sendToWhatsapp = async (inputData) => {
     }
 
     try {
-      await shara.save();
-      console.log("shara order saved successfully.");
+      await holistic.save();
+      console.log("holistic order saved successfully.");
     } catch (error) {
-      console.error("Error saving shara order:", error);
+      console.error("Error saving holistic order:", error);
     }
     console.log("2222222222222222222222");
 
@@ -990,9 +985,9 @@ exports.sendToWhatsapp = async (inputData) => {
 
 
   } else if (inputData.type === "show_card") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
-    if (!shara.token) {
+    if (!holistic.token) {
       const wellcomeData = {
         from: "00",
         to: inputData.phone_number,
@@ -1003,12 +998,12 @@ exports.sendToWhatsapp = async (inputData) => {
 
     } else {
       let card_items = [];
-      for (let i = 0; i < shara.card.length; i++) {
-        card_items.push(shara.card[i]);
+      for (let i = 0; i < holistic.card.length; i++) {
+        card_items.push(holistic.card[i]);
       }
 
       let text = "";
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         text += "السلة 🛒    \n";
       }
       else {
@@ -1017,10 +1012,9 @@ exports.sendToWhatsapp = async (inputData) => {
 
       let item_price = 0;
       let total_price = 0;
-      let total_weight = 0;
 
       for (const item of card_items) {
-        if (shara.language === 'ar') {
+        if (holistic.language === 'ar') {
           text += `\nإسم المنتج : ${item.meal_name} \n السعر ${item.meal_price} ر.ع \n الكمية ${item.quantity} \n`;
         }
         else {
@@ -1031,53 +1025,9 @@ exports.sendToWhatsapp = async (inputData) => {
         total_price += parseFloat(item_price);
 
 
-        if (item.weight) {
-          if (shara.language === 'ar') {
-            text += `الوزن : ${parseFloat(item.weight[0].weight).toFixed(3)} جرام \n`;
-            // text += `السعر : ${parseFloat(item.weight[0].price).toFixed(3)} ر.ع \n`;
-          }
-          else {
-            text += `Weight: ${parseFloat(item.weight[0].weight).toFixed(3)} grams \n`;
-            // text += `Price: ${parseFloat(item.weight[0].price).toFixed(3)} OMR \n`;
-          }
-        }
 
-        if (item.size) {
-          if (shara.language === 'ar') {
-            text += `الإختيار : ${item.size[0].Size_ar} \n`;
-            text += `الوزن : ${parseFloat(item.size[0].weight).toFixed(3)} جرام \n`;
-            // text += `السعر : ${parseFloat(item.size[0].price).toFixed(3)} ر.ع \n`;
-          }
-          else {
-            text += `Choise : ${item.size[0].Size} \n`;
-            text += `Weight: ${parseFloat(item.size[0].weight).toFixed(3)} grams \n`;
-            // text += `Price: ${parseFloat(item.size[0].price).toFixed(3)} OMR \n`;
-          }
-        }
 
-        if (item.additions) {
-          if (item.additions.length > 0) {
-            for (let i = 0; i < item.additions.length; i++) {
-              const element = item.additions[i];
-              if (shara.language === 'ar') {
-                text += `إضافة ${element.addition_name} : ${element.addition_price} ر.ع \n`
-              }
-              else {
-                text += `Addition ${element.addition_name} : ${element.addition_price} OMR \n`
-              }
-            }
-            if (shara.language === 'ar') {
-              text += `سعر الإضافات : ${parseFloat(item.additions_price).toFixed(3)} ر.ع \n`
-            }
-            else {
-              text += `Additions price: ${parseFloat(item.additions_price).toFixed(3)} OMR \n`
-            }
-          }
-        }
-
-        total_weight += parseFloat(item.meal_weight) * parseInt(item.quantity);
-
-        if (shara.language === 'ar') {
+        if (holistic.language === 'ar') {
           text += `سعر المنتج النهائى : ${item_price.toFixed(3) || 0} ر.ع \n`;
         }
         else {
@@ -1086,21 +1036,20 @@ exports.sendToWhatsapp = async (inputData) => {
       }
 
 
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         text += `\nالسعر الإجمالى : ${total_price.toFixed(3)} ر.ع \n`;
       }
       else {
         text += `\nTotal price: ${total_price.toFixed(3)} OMR \n`;
       }
 
-      shara.total_price = total_price.toFixed(3);
-      shara.total_weight = parseFloat(total_weight).toFixed(3);
+      holistic.total_price = total_price.toFixed(3);
 
-      shara.is_offer = false;
-      shara.is_delete = false;
-      shara.same_card = 0;
+      holistic.is_offer = false;
+      holistic.is_delete = false;
+      holistic.same_card = 0;
 
-      await shara.save();
+      await holistic.save();
       console.log("text lenght", text.length);
 
       const wellcomeData2 = {
@@ -1112,12 +1061,12 @@ exports.sendToWhatsapp = async (inputData) => {
       };
       await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
 
-      if (shara.card.length == 0) {
+      if (holistic.card.length == 0) {
         const wellcomeData = {
           from: "00",
           to: inputData.phone_number,
           phone_number: inputData.phone_number,
-          type: "show_categories",
+          type: "flow_catalog_display",
         };
         await sendToWhatsapp.sendToWhatsapp(wellcomeData);
 
@@ -1130,7 +1079,7 @@ exports.sendToWhatsapp = async (inputData) => {
             message_id: inputData.parentMsg,
           };
         }
-        if (shara.language === 'ar') {
+        if (holistic.language === 'ar') {
           data.interactive = {
             type: "button",
             body: {
@@ -1148,7 +1097,7 @@ exports.sendToWhatsapp = async (inputData) => {
                   type: "reply",
                   reply: {
                     id: "1",
-                    title: "حذف / إضافات",
+                    title: "حذف منتج",
                   },
                 }, {
                   type: "reply",
@@ -1179,7 +1128,7 @@ exports.sendToWhatsapp = async (inputData) => {
                   type: "reply",
                   reply: {
                     id: "1",
-                    title: "Delete / Additions",
+                    title: "Delete a product",
                   },
                 }, {
                   type: "reply",
@@ -1207,15 +1156,15 @@ exports.sendToWhatsapp = async (inputData) => {
 
 
   } else if (inputData.type === "address_option") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
-    shara.status = "address";
-    await shara.save();
+    holistic.status = "address";
+    await holistic.save();
 
     data.type = "interactive";
     data.recipient_type = "individual";
     data.to = inputData.to;
-    if (shara.language === 'ar') {
+    if (holistic.language === 'ar') {
       data.interactive = {
         type: "button",
         body: {
@@ -1293,17 +1242,17 @@ exports.sendToWhatsapp = async (inputData) => {
     // });
     // });
   } else if (inputData.type === "add_address") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let countries = [];
     let apiData = [];
 
-    shara.status = "add_address";
-    await shara.save();
+    holistic.status = "add_address";
+    await holistic.save();
 
     let config = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: 'https://alsharashoping.com/api/countries/1/states',
+      url: 'https://holistic.nassatrading.com/api/countries/1/states',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -1322,7 +1271,7 @@ exports.sendToWhatsapp = async (inputData) => {
     console.log(apiData);
     for (let i = 0; i < apiData.length; i++) {
       const country = apiData[i];
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         const newRow = {
           id: `${country.id}`,
           title: country.name_ar,
@@ -1345,7 +1294,7 @@ exports.sendToWhatsapp = async (inputData) => {
     data.type = "interactive";
     data.recipient_type = "individual";
     data.to = inputData.to;
-    if (shara.language === 'ar') {
+    if (holistic.language === 'ar') {
       data.interactive = {
         type: "flow",
         body: {
@@ -1357,8 +1306,8 @@ exports.sendToWhatsapp = async (inputData) => {
             // mode: "draft",
             mode: "published",
             flow_message_version: "3",
-            flow_token: "1066240944918344",
-            flow_id: "1066240944918344",
+            flow_token: "755127513661641",
+            flow_id: "755127513661641",
             flow_cta: "إضافة عنوان",
             flow_action: "navigate",
             flow_action_payload: {
@@ -1409,7 +1358,7 @@ exports.sendToWhatsapp = async (inputData) => {
       console.log({ err });
     }
   } else if (inputData.type === "states") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let states = [];
     let apiData = [];
     let countries = [];
@@ -1417,7 +1366,7 @@ exports.sendToWhatsapp = async (inputData) => {
     let config2 = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: 'https://alsharashoping.com/api/countries/1/states',
+      url: 'https://holistic.nassatrading.com/api/countries/1/states',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -1438,17 +1387,17 @@ exports.sendToWhatsapp = async (inputData) => {
       const country = countries[i];
       if (parseInt(inputData.country) === country.id) {
 
-        for (let index = 0; index < shara.addresses.length; index++) {
-          const element = shara.addresses[index];
+        for (let index = 0; index < holistic.addresses.length; index++) {
+          const element = holistic.addresses[index];
           if (element.id === inputData.address_id) {
-            if (shara.language === 'ar') {
+            if (holistic.language === 'ar') {
               element.country_name_ar = country.name_ar;
               element.country_name_en = country.name_en;
             }
             else {
               element.country_name_en = country.name_en;
             }
-            await shara.save();
+            await holistic.save();
             break;
           }
         }
@@ -1461,7 +1410,7 @@ exports.sendToWhatsapp = async (inputData) => {
     let config = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: `https://alsharashoping.com/api/countries/1/states/${inputData.country}/cities`,
+      url: `https://holistic.nassatrading.com/api/countries/1/states/${inputData.country}/cities`,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -1478,7 +1427,7 @@ exports.sendToWhatsapp = async (inputData) => {
 
     for (let i = 0; i < apiData.length; i++) {
       const state = apiData[i];
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         const newRow = {
           id: `${state.id}`,
           title: state.name_ar,
@@ -1500,7 +1449,7 @@ exports.sendToWhatsapp = async (inputData) => {
     data.type = "interactive";
     data.recipient_type = "individual";
     data.to = inputData.to;
-    if (shara.language === 'ar') {
+    if (holistic.language === 'ar') {
       data.interactive = {
         type: "flow",
         body: {
@@ -1512,8 +1461,8 @@ exports.sendToWhatsapp = async (inputData) => {
             // mode: "draft",
             mode: "published",
             flow_message_version: "3",
-            flow_token: "1030692605325396",
-            flow_id: "1030692605325396",
+            flow_token: "2246968399158766",
+            flow_id: "2246968399158766",
             flow_cta: "الولايات",
             flow_action: "navigate",
             flow_action_payload: {
@@ -1568,14 +1517,14 @@ exports.sendToWhatsapp = async (inputData) => {
       console.log({ err });
     }
   } else if (inputData.type === "save_state") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let apiData = [];
 
 
     let config = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: `https://alsharashoping.com/api/countries/1/states/${inputData.country}/cities`,
+      url: `https://holistic.nassatrading.com/api/countries/1/states/${inputData.country}/cities`,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -1593,16 +1542,16 @@ exports.sendToWhatsapp = async (inputData) => {
     for (let i = 0; i < apiData.length; i++) {
       const state = apiData[i];
       if (parseInt(inputData.state) === state.id) {
-        for (let index = 0; index < shara.addresses.length; index++) {
-          const element = shara.addresses[index];
+        for (let index = 0; index < holistic.addresses.length; index++) {
+          const element = holistic.addresses[index];
           if (element.id === inputData.address_id) {
-            if (shara.language === 'ar') {
+            if (holistic.language === 'ar') {
               element.state_name = state.name_ar;
             }
             else {
               element.state_name = state.name_en;
             }
-            await shara.save();
+            await holistic.save();
             break;
           }
         }
@@ -1629,12 +1578,12 @@ exports.sendToWhatsapp = async (inputData) => {
       console.log({ err });
     }
   } else if (inputData.type === "choose_address") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let addresses = [];
 
-    for (let i = 0; i < shara.addresses.length; i++) {
-      const address = shara.addresses[i];
-      if (shara.language === 'ar') {
+    for (let i = 0; i < holistic.addresses.length; i++) {
+      const address = holistic.addresses[i];
+      if (holistic.language === 'ar') {
         const newRow = {
           id: address.id,
           title: address.name,
@@ -1656,11 +1605,11 @@ exports.sendToWhatsapp = async (inputData) => {
     data.type = "interactive";
     data.recipient_type = "individual";
     data.to = inputData.to;
-    if (shara.language === 'ar') {
+    if (holistic.language === 'ar') {
       data.interactive = {
         type: "flow",
         body: {
-          text: shara.status === 'delete_address' ? "قم بإختيار العنوان المراد حذفة" : "قم بإختيار العنوان",
+          text: holistic.status === 'delete_address' ? "قم بإختيار العنوان المراد حذفة" : "قم بإختيار العنوان",
 
         },
         action: {
@@ -1669,8 +1618,8 @@ exports.sendToWhatsapp = async (inputData) => {
             // mode: "draft",
             mode: "published",
             flow_message_version: "3",
-            flow_token: "949185723888828",
-            flow_id: "949185723888828",
+            flow_token: "4137540806459509",
+            flow_id: "4137540806459509",
             flow_cta: "العناويين",
             flow_action: "navigate",
             flow_action_payload: {
@@ -1687,7 +1636,7 @@ exports.sendToWhatsapp = async (inputData) => {
       data.interactive = {
         type: "flow",
         body: {
-          text: shara.status === 'delete_address' ? "Select the address you want to delete" : "Choose a address",
+          text: holistic.status === 'delete_address' ? "Select the address you want to delete" : "Choose a address",
         },
         action: {
           name: "flow",
@@ -1721,17 +1670,17 @@ exports.sendToWhatsapp = async (inputData) => {
       console.log({ err });
     }
   } else if (inputData.type === "call_card") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
-    shara.status = "choose_items",
-      await shara.save();
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
+    holistic.status = "choose_items",
+      await holistic.save();
 
     data.type = "template";
     data.recipient_type = "individual";
     data.to = inputData.to;
     data.template = {
-      name: shara.language === 'ar' ? "flow_show_categeries2" : "flow_show_categeries",
+      name: holistic.language === 'ar' ? "flow_show_categeries2" : "flow_show_categeries",
       language: {
-        code: shara.language === 'ar' ? "ar" : "en_us",
+        code: holistic.language === 'ar' ? "ar" : "en_us",
       },
       components: [
         {
@@ -1914,12 +1863,12 @@ exports.sendToWhatsapp = async (inputData) => {
     // });
     // });
   } else if (inputData.type === "show_items") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
     let myItems = [];
 
-    for (let i = 0; i < shara.card.length; i++) {
-      const item = shara.card[i];
+    for (let i = 0; i < holistic.card.length; i++) {
+      const item = holistic.card[i];
       const newRow = {
         id: `${item.id}`,
         title: item.meal_name,
@@ -1931,7 +1880,7 @@ exports.sendToWhatsapp = async (inputData) => {
     console.log(myItems);
 
     if (myItems.length == 0) {
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         const wellcomeData = {
           from: "00",
           to: inputData.phone_number,
@@ -1963,11 +1912,11 @@ exports.sendToWhatsapp = async (inputData) => {
       data.type = "interactive";
       data.recipient_type = "individual";
       data.to = inputData.to;
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         data.interactive = {
           type: "flow",
           body: {
-            text: shara.status === 'delete_item' ? "قم بإختيار المنتج الذى تريد حذفة" : "قم بإختيار المنتج"
+            text: holistic.status === 'delete_item' ? "قم بإختيار المنتج الذى تريد حذفة" : "قم بإختيار المنتج"
           },
           action: {
             name: "flow",
@@ -1993,7 +1942,7 @@ exports.sendToWhatsapp = async (inputData) => {
         data.interactive = {
           type: "flow",
           body: {
-            text: shara.status === 'delete_item' ? "Select the product you want to delete" : "Select the product"
+            text: holistic.status === 'delete_item' ? "Select the product you want to delete" : "Select the product"
           },
           action: {
             name: "flow",
@@ -2027,24 +1976,24 @@ exports.sendToWhatsapp = async (inputData) => {
       console.log({ err });
     }
   } else if (inputData.type === "delete_meal") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let deleted = false;
 
-    for (let i = 0; i < shara.card.length; i++) {
-      const item = shara.card[i];
+    for (let i = 0; i < holistic.card.length; i++) {
+      const item = holistic.card[i];
       if (item.id === parseInt(inputData.choosen_item)) {
-        shara.card.splice(shara.card.indexOf(item), 1);
+        holistic.card.splice(holistic.card.indexOf(item), 1);
 
         deleted = true;
-        shara.items_length--;
-        await shara.save();
+        holistic.items_length--;
+        await holistic.save();
         break;
       }
     }
 
 
     if (deleted == true) {
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         const wellcomeData2 = {
           from: "00",
           to: inputData.phone_number,
@@ -2085,12 +2034,12 @@ exports.sendToWhatsapp = async (inputData) => {
       console.log({ err });
     }
   } else if (inputData.type === "test") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
     for (let i = 0; i < inputData.product_items.length; i++) {
       const item = inputData.product_items[i];
       let item_id;
-      if (shara.language === 'en' || (item.product_retailer_id.length === 7 && item.product_retailer_id.endsWith('000'))) {
+      if (holistic.language === 'en' || (item.product_retailer_id.length === 7 && item.product_retailer_id.endsWith('000'))) {
         item_id = item.product_retailer_id.slice(0, -3);
       } else {
         item_id = item.product_retailer_id;
@@ -2109,8 +2058,8 @@ exports.sendToWhatsapp = async (inputData) => {
 
     }
 
-    if ((shara.init_card_counter === 0) && (shara.card.length === shara.items_length)
-      && (inputData.product_items_length === shara.same_card)) {
+    if ((holistic.init_card_counter === 0) && (holistic.card.length === holistic.items_length)
+      && (inputData.product_items_length === holistic.same_card)) {
       console.log("0000000000000000000000000000");
 
       const wellcomeData = {
@@ -2124,201 +2073,52 @@ exports.sendToWhatsapp = async (inputData) => {
 
 
   } else if (inputData.type === "save_item") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let apiData;
 
-    let config2 = {
-      method: 'get',
-      maxBodyLength: Infinity,
-      url: `https://alsharashoping.com/api/products/${inputData.item_id}`,
-      headers: {}
-    };
+    try {
+      const response = await axios.get(`https://holistic.nassatrading.com/api/products/${inputData.item_id}`);
+      apiData = response.data.data;
+    } catch (error) {
+      console.log(error);
+      return;
+    }
 
-    await axios.request(config2)
-      .then((response) => {
-        apiData = response.data.data;
-
-        apiData.weights = Array.isArray(apiData.weights) ? apiData.weights : [];
-        apiData.sizes = Array.isArray(apiData.sizes) ? apiData.sizes : [];
-        apiData.additions = Array.isArray(apiData.additions) ? apiData.additions : [];
-        apiData.images = Array.isArray(apiData.images) ? apiData.images : [];
-
-        apiData.category = apiData.category || {};
-        apiData.price = apiData.price || 0;
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-
-    function createCardItem(weights, sizes = null) {
-      let mealPrice = parseFloat(apiData.Price);
-      let total_weight = 0;
-
-      if (weights && weights.length === 1) {
-        mealPrice = parseFloat(weights[0].price);
-        total_weight = parseFloat(weights[0].weight);
-      }
-
-      if (parseInt(apiData.Discount) > 0) {
-        let discountPercentage = parseInt(apiData.Discount) / 100;
-        mealPrice = mealPrice - (mealPrice * parseFloat(discountPercentage));
-      }
-
-      if (sizes && sizes.length === 1) {
-        mealPrice += parseFloat(sizes[0].price);
-        total_weight += parseFloat(sizes[0].weight);
-      }
-
+    let existingItem = holistic.card.find(item => item.meal_id === `${apiData.id}`);
+    if (existingItem) {
+      existingItem.quantity += parseInt(inputData.quantity);
+      holistic.markModified('card');
+    } else {
       let cardItem = {
-        id: shara.items_counter + 1,
+        id: holistic.items_counter + 1,
         meal_id: `${apiData.id}`,
         quantity: parseInt(inputData.quantity),
-        meal_name: shara.language === 'ar' ? `${apiData.fr_Product_Name}` : `${apiData.en_Product_Name}`,
-        meal_price: parseFloat(mealPrice.toFixed(3)),
-        meal_weight: parseFloat(total_weight),
+        meal_name: holistic.language === 'ar' ? `${apiData.fr_Product_Name}` : `${apiData.en_Product_Name}`,
+        meal_price: parseFloat(apiData.Price),
       };
-
-      if (weights !== null) cardItem.weight = weights;
-      if (sizes !== null) cardItem.size = sizes;
-      if (apiData.additions && apiData.additions.length > 0) {
-        cardItem.additions_price = 0;
-        cardItem.additions = [];
-      }
-
-      return cardItem;
-    }
-
-    function isSameItem(existingItem, weights, sizes) {
-      const sameWeights = weights === null || JSON.stringify(existingItem.weight) === JSON.stringify(weights);
-      const sameSizes = sizes === null || JSON.stringify(existingItem.size) === JSON.stringify(sizes);
-      return sameWeights && sameSizes;
-    }
-
-    let isNewItem = false;
-
-    if (apiData.weights.length > 1 && apiData.sizes.length === 1) {
-      shara.init_card.push(createCardItem([], apiData.sizes));
-      isNewItem = true;
-    } else if (apiData.weights.length > 1 && apiData.sizes.length > 1) {
-      shara.init_card.push(createCardItem([], []));
-      isNewItem = true;
-    } else if (apiData.weights.length > 1 && apiData.sizes.length === 0) {
-      shara.init_card.push(createCardItem([], null));
-      isNewItem = true;
-    } else if (apiData.weights.length === 1 && apiData.sizes.length === 1) {
-      let existingItem = shara.card.find(item =>
-        item.meal_id === apiData.id.toString() &&
-        isSameItem(item, apiData.weights, apiData.sizes)
-      );
-
-      if (existingItem) {
-        existingItem.quantity += parseInt(inputData.quantity);
-        shara.markModified('card');
-      } else {
-        let newCardItem = createCardItem(apiData.weights, apiData.sizes);
-        shara.card.push(newCardItem);
-        isNewItem = true;
-      }
-      shara.same_card++;
-      // shara.card.push(createCardItem(apiData.weights, apiData.sizes));
-    } else if (apiData.weights.length === 1 && apiData.sizes.length > 1) {
-      shara.init_card.push(createCardItem(apiData.weights, []));
-      isNewItem = true;
-    } else if (apiData.weights.length === 1 && apiData.sizes.length === 0) {
-      let existingItem = shara.card.find(item =>
-        item.meal_id === apiData.id.toString() &&
-        isSameItem(item, apiData.weights, null)
-      );
-
-      if (existingItem) {
-        existingItem.quantity += parseInt(inputData.quantity);
-        shara.markModified('card');
-      } else {
-        let newCardItem = createCardItem(apiData.weights, null);
-        shara.card.push(newCardItem);
-        isNewItem = true;
-      }
-      shara.same_card++;
-      // shara.card.push(createCardItem(apiData.weights, null));
-    } else if (apiData.weights.length === 0 && apiData.sizes.length === 1) {
-      let existingItem = shara.card.find(item =>
-        item.meal_id === apiData.id.toString() &&
-        isSameItem(item, null, apiData.sizes)
-      );
-
-      if (existingItem) {
-        existingItem.quantity += parseInt(inputData.quantity);
-        shara.markModified('card');
-      } else {
-        let newCardItem = createCardItem(null, apiData.sizes);
-        shara.card.push(newCardItem);
-        isNewItem = true;
-      }
-      shara.same_card++;
-      // shara.card.push(createCardItem(null, apiData.sizes));
-    } else if (apiData.weights.length === 0 && apiData.sizes.length > 1) {
-      shara.init_card.push(createCardItem(null, []));
-    } else if (apiData.weights.length === 0 && apiData.sizes.length === 0) {
-      let existingItem = shara.card.find(item =>
-        item.meal_id === apiData.id.toString() &&
-        isSameItem(item, null, null)
-      );
-
-      if (existingItem) {
-        existingItem.quantity += parseInt(inputData.quantity);
-        shara.markModified('card');
-      } else {
-        let newCardItem = createCardItem(null, null);
-        shara.card.push(newCardItem);
-        isNewItem = true;
-      }
-
-      shara.same_card++;
-      // shara.card.push(createCardItem(null, null));
-    }
-
-
-    if (isNewItem) {
-      shara.items_counter++;
-      shara.items_length++;
+      holistic.card.push(cardItem);
+      holistic.items_counter++;
+      holistic.items_length++;
+      holistic.same_card++;
     }
 
     try {
-      await shara.save();
-      console.log("shara order saved successfully.");
+      await holistic.save();
+      console.log("holistic order saved successfully.");
     } catch (error) {
-      console.error("Error saving shara order:", error);
+      console.error("Error saving holistic order:", error);
     }
 
-    if (shara.init_card.length > shara.init_card_counter) {
-      const item = shara.init_card[shara.init_card_counter];
-
-      const wellcomeData = {
-        from: "00",
-        to: inputData.phone_number,
-        phone_number: inputData.phone_number,
-        product_label: item.meal_name,
-        product_id: item.meal_id,
-        type: "show_product_options",
-      };
-      await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-      shara.init_card_counter++;
-      await shara.save();
-
-    } else if ((shara.init_card_counter === 0) && (shara.card.length === shara.items_length)
-      && (inputData.product_items_length === shara.same_card)) {
-      console.log("0000000000000000000000000000");
-
-      const wellcomeData = {
-        from: "00",
-        to: inputData.phone_number,
-        phone_number: inputData.phone_number,
-        type: "show_card",
-      };
-      await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-    }
+    // إرسال رسالة show_card مباشرة
+    const wellcomeData = {
+      from: "00",
+      to: inputData.phone_number,
+      phone_number: inputData.phone_number,
+      type: "show_card",
+    };
+    await sendToWhatsapp.sendToWhatsapp(wellcomeData);
   } else if (inputData.type === "show_product_options") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let apiData = [];
     let weights = [];
     let sizes = [];
@@ -2326,7 +2126,7 @@ exports.sendToWhatsapp = async (inputData) => {
     let config = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: `https://alsharashoping.com/api/products/${inputData.product_id}`,
+      url: `https://holistic.nassatrading.com/api/products/${inputData.product_id}`,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -2348,7 +2148,7 @@ exports.sendToWhatsapp = async (inputData) => {
         const item = apiData.sizes[i];
         let newRow;
 
-        if (shara.language === 'ar') {
+        if (holistic.language === 'ar') {
           newRow = {
             id: `${item.Size_Id}`,
             title: item.Size_ar,
@@ -2374,7 +2174,7 @@ exports.sendToWhatsapp = async (inputData) => {
         const item = apiData.weights[i];
         let newRow;
 
-        if (shara.language === 'ar') {
+        if (holistic.language === 'ar') {
           newRow = {
             id: `${item.id}`,
             title: `${item.weight} جرام`,
@@ -2400,7 +2200,7 @@ exports.sendToWhatsapp = async (inputData) => {
       data.type = "interactive";
       data.recipient_type = "individual";
       data.to = inputData.to;
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         data.interactive = {
           type: "flow",
           body: {
@@ -2464,7 +2264,7 @@ exports.sendToWhatsapp = async (inputData) => {
       data.type = "interactive";
       data.recipient_type = "individual";
       data.to = inputData.to;
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         data.interactive = {
           type: "flow",
           body: {
@@ -2526,7 +2326,7 @@ exports.sendToWhatsapp = async (inputData) => {
       data.type = "interactive";
       data.recipient_type = "individual";
       data.to = inputData.to;
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         data.interactive = {
           type: "flow",
           body: {
@@ -2596,12 +2396,12 @@ exports.sendToWhatsapp = async (inputData) => {
       console.log({ err });
     }
   } else if (inputData.type === "save_option") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
     // Fetch sizes data from API
     let apiData;
     try {
-      const response = await axios.get(`https://alsharashoping.com/api/products/${inputData.product_id}`);
+      const response = await axios.get(`https://holistic.nassatrading.com/api/products/${inputData.product_id}`);
       apiData = response.data.data.sizes;
     } catch (error) {
       console.log(error);
@@ -2613,7 +2413,7 @@ exports.sendToWhatsapp = async (inputData) => {
     if (!selectedSize) return;
 
     // Find the corresponding item in the init_card
-    const item = shara.init_card.find(cardItem => cardItem.meal_id === inputData.product_id);
+    const item = holistic.init_card.find(cardItem => cardItem.meal_id === inputData.product_id);
     if (!item) return;
 
     // Update the meal price and add the selected size
@@ -2622,41 +2422,41 @@ exports.sendToWhatsapp = async (inputData) => {
     item.size.push(selectedSize);
 
     // Check if the item with the same size already exists in the card
-    const existingItem = shara.card.find(cardItem => cardItem.meal_id === item.meal_id && cardItem.size[0].Size_Id == selectedSize.Size_Id);
+    const existingItem = holistic.card.find(cardItem => cardItem.meal_id === item.meal_id && cardItem.size[0].Size_Id == selectedSize.Size_Id);
 
     if (existingItem) {
       existingItem.quantity += parseInt(item.quantity);
-      shara.markModified('card');
+      holistic.markModified('card');
     } else {
-      shara.card.push(item);
+      holistic.card.push(item);
     }
 
     // Remove item from init_card and update counter
-    shara.init_card = shara.init_card.filter(cardItem => cardItem !== item);
-    shara.init_card_counter--;
-    shara.same_card++;
-    await shara.save();
+    holistic.init_card = holistic.init_card.filter(cardItem => cardItem !== item);
+    holistic.init_card_counter--;
+    holistic.same_card++;
+    await holistic.save();
 
     // Send appropriate response based on init_card_counter
     const wellcomeData = {
       from: "00",
       to: inputData.phone_number,
       phone_number: inputData.phone_number,
-      type: shara.init_card_counter === 0 ? "show_card" : "text",
-      content: shara.init_card_counter === 0 ? null : (
-        shara.language === 'ar' ?
+      type: holistic.init_card_counter === 0 ? "show_card" : "text",
+      content: holistic.init_card_counter === 0 ? null : (
+        holistic.language === 'ar' ?
           "يرجى إنهاء كل الإختيارات لإستكمال الخطوة التالية" :
           "Please complete all selections to complete the next step."
       ),
     };
     await sendToWhatsapp.sendToWhatsapp(wellcomeData);
   } else if (inputData.type === "save_weight") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
     // Fetch weights data from API
     let apiData;
     try {
-      const response = await axios.get(`https://alsharashoping.com/api/products/${inputData.product_id}`);
+      const response = await axios.get(`https://holistic.nassatrading.com/api/products/${inputData.product_id}`);
       apiData = response.data.data.weights;
     } catch (error) {
       console.log(error);
@@ -2668,7 +2468,7 @@ exports.sendToWhatsapp = async (inputData) => {
     if (!selectedWeight) return;
 
     // Find the corresponding item in the init_card
-    const item = shara.init_card.find(cardItem => cardItem.meal_id === inputData.product_id);
+    const item = holistic.init_card.find(cardItem => cardItem.meal_id === inputData.product_id);
     if (!item) return;
 
     // Update the meal price and add the selected weight
@@ -2677,42 +2477,42 @@ exports.sendToWhatsapp = async (inputData) => {
     item.weight.push(selectedWeight);
 
     // Check if the item with the same weight already exists in the card
-    const existingItem = shara.card.find(cardItem => cardItem.meal_id === item.meal_id && cardItem.weight[0].id == selectedWeight.id);
+    const existingItem = holistic.card.find(cardItem => cardItem.meal_id === item.meal_id && cardItem.weight[0].id == selectedWeight.id);
 
     if (existingItem) {
       existingItem.quantity += parseInt(item.quantity);
-      shara.markModified('card');
+      holistic.markModified('card');
     } else {
-      shara.card.push(item);
+      holistic.card.push(item);
     }
 
     // Remove item from init_card and update counter
-    shara.init_card = shara.init_card.filter(cardItem => cardItem !== item);
-    shara.init_card_counter--;
-    shara.same_card++;
-    await shara.save();
+    holistic.init_card = holistic.init_card.filter(cardItem => cardItem !== item);
+    holistic.init_card_counter--;
+    holistic.same_card++;
+    await holistic.save();
 
     // Send appropriate response based on init_card_counter
     const wellcomeData = {
       from: "00",
       to: inputData.phone_number,
       phone_number: inputData.phone_number,
-      type: shara.init_card_counter === 0 ? "show_card" : "text",
-      content: shara.init_card_counter === 0 ? null : (
-        shara.language === 'ar' ?
+      type: holistic.init_card_counter === 0 ? "show_card" : "text",
+      content: holistic.init_card_counter === 0 ? null : (
+        holistic.language === 'ar' ?
           "يرجى إنهاء كل الإختيارات لإستكمال الخطوة التالية" :
           "Please complete all selections to complete the next step."
       ),
     };
     await sendToWhatsapp.sendToWhatsapp(wellcomeData);
   } else if (inputData.type === "save_size_weight") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let apiData;
 
     let config = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: `https://alsharashoping.com/api/products/${inputData.product_id}`,
+      url: `https://holistic.nassatrading.com/api/products/${inputData.product_id}`,
       headers: {}
     };
 
@@ -2728,7 +2528,7 @@ exports.sendToWhatsapp = async (inputData) => {
     let selectedWeight = apiData.weights.find(weight => weight.id == parseInt(inputData.weight_id));
 
     if (selectedSize && selectedWeight) {
-      const item = shara.init_card.find(cardItem => cardItem.meal_id === inputData.product_id);
+      const item = holistic.init_card.find(cardItem => cardItem.meal_id === inputData.product_id);
 
       // Update meal price with both size and weight prices
       if (parseFloat(selectedWeight.price) > 0) {
@@ -2746,7 +2546,7 @@ exports.sendToWhatsapp = async (inputData) => {
       item.weight.push(selectedWeight);
 
       // Check if the item with the same size and weight already exists in the card
-      const existingItem = shara.card.find(cardItem =>
+      const existingItem = holistic.card.find(cardItem =>
         cardItem.meal_id === item.meal_id &&
         cardItem.size[0].Size_Id == selectedSize.Size_Id &&
         cardItem.weight[0].id == selectedWeight.id
@@ -2755,19 +2555,19 @@ exports.sendToWhatsapp = async (inputData) => {
       if (existingItem) {
         console.log("Item exists in card");
         existingItem.quantity += parseInt(item.quantity);
-        shara.markModified('card');
+        holistic.markModified('card');
       } else {
         console.log("Item does not exist in card");
-        shara.card.push(item);
+        holistic.card.push(item);
       }
 
-      shara.init_card.splice(shara.init_card.indexOf(item), 1);
-      shara.init_card_counter--;
-      shara.same_card++;
-      await shara.save();
+      holistic.init_card.splice(holistic.init_card.indexOf(item), 1);
+      holistic.init_card_counter--;
+      holistic.same_card++;
+      await holistic.save();
     }
 
-    if (shara.init_card_counter == 0) {
+    if (holistic.init_card_counter == 0) {
       console.log("All items selected, showing card.");
 
       const wellcomeData = {
@@ -2782,7 +2582,7 @@ exports.sendToWhatsapp = async (inputData) => {
         from: "00",
         to: inputData.phone_number,
         phone_number: inputData.phone_number,
-        content: shara.language === 'ar' ?
+        content: holistic.language === 'ar' ?
           "يرجى إنهاء كل الإختيارات لإستكمال الخطوة التالية" :
           "Please complete all selections to complete the next step.",
         type: "text",
@@ -2790,9 +2590,9 @@ exports.sendToWhatsapp = async (inputData) => {
       await sendToWhatsapp.sendToWhatsapp(wellcomeData);
     }
   } else if (inputData.type === "calculate_delivery_charge") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
-    const address = shara.addresses.find(addresses => addresses.id === shara.choosen_address);
+    const address = holistic.addresses.find(addresses => addresses.id === holistic.choosen_address);
 
     const FormData = require('form-data');
     let data = new FormData();
@@ -2801,7 +2601,7 @@ exports.sendToWhatsapp = async (inputData) => {
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'https://alsharashoping.com/api/calculate-delivery-charge',
+      url: 'https://holistic.nassatrading.com/api/calculate-delivery-charge',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -2814,8 +2614,8 @@ exports.sendToWhatsapp = async (inputData) => {
       .then(async (response) => {
         console.log(JSON.stringify(response.data.data));
         if (response.data.data) {
-          shara.delivery_price = response.data.data.charge;
-          await shara.save();
+          holistic.delivery_price = response.data.data.charge;
+          await holistic.save();
           console.log("charge saved");
 
           const wellcomeData = {
@@ -2842,7 +2642,7 @@ exports.sendToWhatsapp = async (inputData) => {
 
 
   } else if (inputData.type === "show_offer_meals") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
     let branch_meals = [];
     let product_items = [];
@@ -2852,7 +2652,7 @@ exports.sendToWhatsapp = async (inputData) => {
     let config2 = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: 'https://alsharashoping.com/api/products-with-discount?scope=mini',
+      url: 'https://holistic.nassatrading.com/api/products-with-discount?scope=mini',
       headers: {}
     };
 
@@ -2866,7 +2666,7 @@ exports.sendToWhatsapp = async (inputData) => {
         console.log(error);
       });
 
-    if (shara.language === 'ar') {
+    if (holistic.language === 'ar') {
       category_name = "العروض";
     } else {
       category_name = "Offers";
@@ -2874,7 +2674,7 @@ exports.sendToWhatsapp = async (inputData) => {
 
     for (let i = 0; i < branch_meals.length; i++) {
       const meal = branch_meals[i];
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         const newRow = {
           "product_retailer_id": `${meal.id}`,
         };
@@ -2899,7 +2699,7 @@ exports.sendToWhatsapp = async (inputData) => {
 
 
     if (product_items.length == 0) {
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         const wellcomeData = {
           from: "00",
           to: inputData.phone_number,
@@ -2968,8 +2768,8 @@ exports.sendToWhatsapp = async (inputData) => {
       console.log(sections.length);
       console.log(JSON.stringify(sections));
 
-      shara.status = "choose_items";
-      await shara.save();
+      holistic.status = "choose_items";
+      await holistic.save();
 
       for (let i = 0; i < sections.length; i++) {
         const element = sections[i];
@@ -3007,19 +2807,19 @@ exports.sendToWhatsapp = async (inputData) => {
     // });
     // });
   } else if (inputData.type === "calculate_tax") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
-    const address = shara.addresses.find(addresses => addresses.id === shara.choosen_address);;
+    const address = holistic.addresses.find(addresses => addresses.id === holistic.choosen_address);;
 
     const FormData = require('form-data');
     let data = new FormData();
-    data.append('subtotal', shara.total_price);
+    data.append('subtotal', holistic.total_price);
     data.append('country', address.country_name_en);
 
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'https://alsharashoping.com/api/calculate-tax',
+      url: 'https://holistic.nassatrading.com/api/calculate-tax',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -3032,8 +2832,8 @@ exports.sendToWhatsapp = async (inputData) => {
       .then(async (response) => {
         console.log(JSON.stringify(response.data));
         if (response.data.success == true) {
-          shara.tax = response.data.tax_amount;
-          await shara.save();
+          holistic.tax = response.data.tax_amount;
+          await holistic.save();
           console.log("tax saved");
 
           const wellcomeData = {
@@ -3060,22 +2860,22 @@ exports.sendToWhatsapp = async (inputData) => {
 
 
   } else if (inputData.type === "calculate_total_price") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
     let total_price = 0;
     let weight_extra_charge = 0.0;
     let text = "";
-    if (shara.total_weight > 0 && shara.total_weight > 10000) {
-      weight_extra_charge = ((shara.total_weight / 1000) - 10) * .1;
+    if (holistic.total_weight > 0 && holistic.total_weight > 10000) {
+      weight_extra_charge = ((holistic.total_weight / 1000) - 10) * .1;
     }
-    if (shara.language === 'ar') {
+    if (holistic.language === 'ar') {
       text += "إجمالى الأسعار \n";
-      text += `سعر المنتجات : ${parseFloat(shara.total_price).toFixed(3)} ر.ع \n`;
-      total_price += parseFloat(shara.total_price);
-      text += `تكلفة الشحن : ${parseFloat(shara.delivery_price).toFixed(3)} ر.ع  \n`;
-      total_price += parseFloat(shara.delivery_price);
-      text += `ضريبة القيمة المضافة : ${parseFloat(shara.tax).toFixed(3)} ر.ع  \n`;
-      total_price += parseFloat(shara.tax);
+      text += `سعر المنتجات : ${parseFloat(holistic.total_price).toFixed(3)} ر.ع \n`;
+      total_price += parseFloat(holistic.total_price);
+      text += `تكلفة الشحن : ${parseFloat(holistic.delivery_price).toFixed(3)} ر.ع  \n`;
+      total_price += parseFloat(holistic.delivery_price);
+      text += `ضريبة القيمة المضافة : ${parseFloat(holistic.tax).toFixed(3)} ر.ع  \n`;
+      total_price += parseFloat(holistic.tax);
       if (weight_extra_charge > 0) {
         text += `تكلفة الوزن الزائد : ${parseFloat(weight_extra_charge).toFixed(3)} ر.ع \n`;
         total_price += parseFloat(weight_extra_charge);
@@ -3085,12 +2885,12 @@ exports.sendToWhatsapp = async (inputData) => {
     }
     else {
       text += "Total prices \n";
-      text += `Products price : ${parseFloat(shara.total_price).toFixed(3)} OMR \n`;
-      total_price += parseFloat(shara.total_price);
-      text += `Shipping cost : ${parseFloat(shara.delivery_price).toFixed(3)} OMR \n`;
-      total_price += parseFloat(shara.delivery_price);
-      text += `VAT : ${parseFloat(shara.tax).toFixed(3)} OMR \n`;
-      total_price += parseFloat(shara.tax);
+      text += `Products price : ${parseFloat(holistic.total_price).toFixed(3)} OMR \n`;
+      total_price += parseFloat(holistic.total_price);
+      text += `Shipping cost : ${parseFloat(holistic.delivery_price).toFixed(3)} OMR \n`;
+      total_price += parseFloat(holistic.delivery_price);
+      text += `VAT : ${parseFloat(holistic.tax).toFixed(3)} OMR \n`;
+      total_price += parseFloat(holistic.tax);
       if (weight_extra_charge > 0) {
         text += `Extra weight charge: ${parseFloat(weight_extra_charge).toFixed(3)} OMR \n`;
         total_price += parseFloat(weight_extra_charge);
@@ -3098,8 +2898,8 @@ exports.sendToWhatsapp = async (inputData) => {
       text += `Total cost : ${parseFloat(total_price).toFixed(3)} OMR \n`;
     }
 
-    shara.total = total_price;
-    await shara.save();
+    holistic.total = total_price;
+    await holistic.save();
 
     const wellcomeData = {
       from: "00",
@@ -3119,14 +2919,14 @@ exports.sendToWhatsapp = async (inputData) => {
     await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
 
   } else if (inputData.type === "Payment_test") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let products = [];
     let size = 1;
     let address;
 
 
-    for (let i = 0; i < shara.card.length; i++) {
-      const item = shara.card[i];
+    for (let i = 0; i < holistic.card.length; i++) {
+      const item = holistic.card[i];
 
       const itemm2 = {};
 
@@ -3156,11 +2956,11 @@ exports.sendToWhatsapp = async (inputData) => {
 
     }
 
-    address = shara.addresses.find(addresses => addresses.id === shara.choosen_address);
+    address = holistic.addresses.find(addresses => addresses.id === holistic.choosen_address);
 
 
     let data = {
-      "billing_name": shara.name ? shara.name : inputData.phone_number,
+      "billing_name": holistic.name ? holistic.name : inputData.phone_number,
       "billing_email": address.email ? address.email : "",
       "billing_street_address": address.street ? address.street : "",
       "billing_zipcode": "12345",
@@ -3184,12 +2984,12 @@ exports.sendToWhatsapp = async (inputData) => {
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'https://alsharashoping.com/api/checkout',
+      url: 'https://holistic.nassatrading.com/api/checkout',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Accept-Language': shara.language,
-        'Authorization': `Bearer ${shara.token}`
+        'Accept-Language': holistic.language,
+        'Authorization': `Bearer ${holistic.token}`
       },
       data: data
     };
@@ -3202,9 +3002,10 @@ exports.sendToWhatsapp = async (inputData) => {
         if (response.data.url) {
 
           let url = response.data.url;
+          const test = url.includes("uatcheckout.thawani.om") ? true : false;
           url = url.split('/pay/')[1];
           console.log("url", url);
-          if (shara.language === 'ar') {
+          if (holistic.language === 'ar') {
             const wellcomeData = {
               from: "00",
               to: inputData.phone_number,
@@ -3217,9 +3018,9 @@ exports.sendToWhatsapp = async (inputData) => {
               from: "00",
               to: inputData.phone_number,
               phone_number: inputData.phone_number,
-              price: shara.total.toFixed(3),
+              price: holistic.total.toFixed(3),
               url: url,
-              type: "Tpayment_url",
+              type: test ? "Tpayment_url_test" : "Tpayment_url",
               // type: "Tpayment_url_test",
             };
             await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
@@ -3237,9 +3038,9 @@ exports.sendToWhatsapp = async (inputData) => {
               from: "00",
               to: inputData.phone_number,
               phone_number: inputData.phone_number,
-              price: shara.total.toFixed(3),
+              price: holistic.total.toFixed(3),
               url: url,
-              type: "Tpayment_url_en",
+              type: test ? "Tpayment_url_test_en" : "Tpayment_url_en",
               // type: "Tpayment_url_test_en",
             };
             await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
@@ -3263,7 +3064,7 @@ exports.sendToWhatsapp = async (inputData) => {
     data.to = inputData.to;
 
     data.template = {
-      name: "flow_payment2",
+      name: "flow_payment",
       language: {
         code: "ar",
       },
@@ -3273,7 +3074,7 @@ exports.sendToWhatsapp = async (inputData) => {
           parameters: [
             {
               type: "text",
-              text: `${inputData.price} ر.ع`,
+              text: `${inputData.price}`,
             },
           ],
         },
@@ -3311,7 +3112,7 @@ exports.sendToWhatsapp = async (inputData) => {
     data.to = inputData.to;
 
     data.template = {
-      name: "flow_payment2",
+      name: "flow_payment",
       language: {
         code: "en_US",
       },
@@ -3321,7 +3122,7 @@ exports.sendToWhatsapp = async (inputData) => {
           parameters: [
             {
               type: "text",
-              text: `${inputData.price} OMR`,
+              text: `${inputData.price}`,
             },
           ],
         },
@@ -3449,14 +3250,14 @@ exports.sendToWhatsapp = async (inputData) => {
 
     // });
   } else if (inputData.type === "subcategories") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let subcategories = [];
     let apiData = [];
 
     let config2 = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: `https://alsharashoping.com/api/subcategories/${inputData.category_id}`,
+      url: `https://holistic.nassatrading.com/api/subcategories/${inputData.category_id}`,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -3476,7 +3277,7 @@ exports.sendToWhatsapp = async (inputData) => {
 
     for (let i = 0; i < apiData.length; i++) {
       const subcategory = apiData[i];
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         const newRow = {
           id: `${subcategory.id}`,
           title: subcategory.name_ar,
@@ -3496,7 +3297,7 @@ exports.sendToWhatsapp = async (inputData) => {
     }
 
     if (subcategories.length == 0) {
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         const wellcomeData = {
           from: "00",
           to: inputData.phone_number,
@@ -3528,7 +3329,7 @@ exports.sendToWhatsapp = async (inputData) => {
       data.type = "interactive";
       data.recipient_type = "individual";
       data.to = inputData.to;
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         data.interactive = {
           type: "flow",
           body: {
@@ -3594,559 +3395,6 @@ exports.sendToWhatsapp = async (inputData) => {
     } catch (err) {
       console.log({ err });
     }
-  } else if (inputData.type === "edit_option") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
-
-    data.type = "interactive";
-    data.recipient_type = "individual";
-    data.to = inputData.to;
-    if (shara.language === 'ar') {
-      data.interactive = {
-        type: "button",
-        body: {
-          text: "إختر نوع التعديل",
-        },
-        action: {
-          buttons: [
-            {
-              type: "reply",
-              reply: {
-                id: "1",
-                title: "إضافات لمنتج",
-              },
-            },
-            {
-              type: "reply",
-              reply: {
-                id: "2",
-                title: "حذف منتج",
-              },
-            }
-          ],
-        },
-      };
-    }
-    else {
-      data.interactive = {
-        type: "button",
-        body: {
-          text: "Choose the edit type",
-        },
-        action: {
-          buttons: [
-            {
-              type: "reply",
-              reply: {
-                id: "1",
-                title: "Add-ons to a product",
-              },
-            },
-            {
-              type: "reply",
-              reply: {
-                id: "2",
-                title: "Delete a product",
-              },
-            }
-          ],
-        },
-      };
-    }
-
-
-    console.log({ data }, "teeeeeeeeeeeeeeest");
-    try {
-      const wa_res = await axiosHelper.post(url, data);
-      console.log("000000", {
-        wa_res: wa_res.data.messages[0],
-      });
-    } catch (err) {
-      console.log({ err });
-    }
-    // });
-    // });
-  } else if (inputData.type === "show_items_have_additions") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
-
-    let myItems = [];
-
-    for (let i = 0; i < shara.card.length; i++) {
-      const item = shara.card[i];
-      if (item.additions && item.additions.length === 0) {
-        const newRow = {
-          id: `${item.meal_id}`,
-          title: item.meal_name,
-        };
-        myItems.push(newRow);
-      }
-    }
-
-
-    console.log(myItems);
-
-    if (myItems.length == 0) {
-      if (shara.language === 'ar') {
-        const wellcomeData = {
-          from: "00",
-          to: inputData.phone_number,
-          phone_number: inputData.phone_number,
-          content: "عفوا لا يوجد لديك منتجات يمكن إضافة إضافات لها",
-          type: "text",
-        };
-        await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-      }
-      else {
-        const wellcomeData = {
-          from: "00",
-          to: inputData.phone_number,
-          phone_number: inputData.phone_number,
-          content: "Sorry, you do not have any products that can be added to",
-          type: "text",
-        };
-        await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-      }
-
-      const wellcomeData2 = {
-        from: "00",
-        to: inputData.phone_number,
-        phone_number: inputData.phone_number,
-        type: "show_card",
-      };
-      await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
-    } else {
-      data.type = "interactive";
-      data.recipient_type = "individual";
-      data.to = inputData.to;
-      if (shara.language === 'ar') {
-        data.interactive = {
-          type: "flow",
-          body: {
-            text: "قم بإختيار المنتج الذى تريد إضافة له إضافات",
-          },
-          action: {
-            name: "flow",
-            parameters: {
-              // mode: "draft",
-              mode: "published",
-              flow_message_version: "3",
-              flow_token: "1914155952420892",
-              flow_id: "1914155952420892",
-              flow_cta: "إختيار",
-              flow_action: "navigate",
-              flow_action_payload: {
-                screen: "choose_items",
-                data: {
-                  myItems: myItems,
-                },
-              },
-            },
-          },
-        };
-      }
-      else {
-        data.interactive = {
-          type: "flow",
-          body: {
-            text: "Choose the product to which you want to add additives.",
-          },
-          action: {
-            name: "flow",
-            parameters: {
-              // mode: "draft",
-              mode: "published",
-              flow_message_version: "3",
-              flow_token: "528146699653128",
-              flow_id: "528146699653128",
-              flow_cta: "Choose",
-              flow_action: "navigate",
-              flow_action_payload: {
-                screen: "choose_items",
-                data: {
-                  myItems: myItems,
-                },
-              },
-            },
-          },
-        };
-      }
-    }
-
-    console.log({ data }, "teeeeeeeeeeeeeeest");
-    try {
-      const wa_res = await axiosHelper.post(url, data);
-      console.log("000000", {
-        wa_res: wa_res.data.messages[0],
-      });
-    } catch (err) {
-      console.log({ err });
-    }
-  } else if (inputData.type === "show_addition_of_product") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
-    let additions = [];
-    let apiData = [];
-    let item_label = "";
-
-    let config2 = {
-      method: 'get',
-      maxBodyLength: Infinity,
-      url: `https://alsharashoping.com/api/products/${inputData.choosen_item}`,
-      headers: {}
-    };
-
-    await axios.request(config2)
-      .then((response) => {
-        console.log(JSON.stringify(response.data));
-        apiData = response.data.data;
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-
-    const item = shara.card.find(cardItem => cardItem.meal_id === inputData.choosen_item && cardItem.additions.length == 0);
-
-
-    if (shara.language === 'ar') {
-      item_label = apiData.fr_Product_Name;
-    }
-    else {
-      item_label = apiData.en_Product_Name;
-    }
-    for (let i = 0; i < apiData.additions.length; i++) {
-      const addition = apiData.additions[i];
-      if (shara.language === 'ar') {
-        const newRow = {
-          id: `${addition.id}`,
-          title: addition.name_ar,
-
-        };
-        additions.push(newRow);
-      }
-      else {
-        const newRow = {
-          id: `${addition.id}`,
-          title: addition.name ? addition.name : addition.name_ar,
-
-        };
-        additions.push(newRow);
-      }
-
-    }
-
-    if (additions.length == 0) {
-      if (shara.language === 'ar') {
-        const wellcomeData = {
-          from: "00",
-          to: inputData.phone_number,
-          phone_number: inputData.phone_number,
-          content: "عفوا هذا المنتج لا يحتوى على إضافات",
-          type: "text",
-        };
-        await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-      }
-      else {
-        const wellcomeData = {
-          from: "00",
-          to: inputData.phone_number,
-          phone_number: inputData.phone_number,
-          content: "Sorry, this product does not contain additives",
-          type: "text",
-        };
-        await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-      }
-
-      const wellcomeData2 = {
-        from: "00",
-        to: inputData.phone_number,
-        phone_number: inputData.phone_number,
-        type: "show_categories",
-      };
-      await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
-    } else {
-      data.type = "interactive";
-      data.recipient_type = "individual";
-      data.to = inputData.to;
-      if (shara.language === 'ar') {
-        data.interactive = {
-          type: "flow",
-          body: {
-            text: "قم بإختيار الاضافات",
-          },
-          action: {
-            name: "flow",
-            parameters: {
-              // mode: "draft",
-              mode: "published",
-              flow_message_version: "3",
-              flow_token: "1028277695433728",
-              flow_id: "1028277695433728",
-              flow_cta: "إضافة",
-              flow_action: "navigate",
-              flow_action_payload: {
-                screen: "add_additions",
-                data: {
-                  additions: additions,
-                  item_label: item_label,
-                  choosen_item: `${item.id}`,
-                },
-              },
-            },
-          },
-        };
-      }
-      else {
-        data.interactive = {
-          type: "flow",
-          body: {
-            text: "Choose add-ons",
-          },
-          action: {
-            name: "flow",
-            parameters: {
-              // mode: "draft",
-              mode: "published",
-              flow_message_version: "3",
-              flow_token: "1659799611462553",
-              flow_id: "1659799611462553",
-              flow_cta: "add",
-              flow_action: "navigate",
-              flow_action_payload: {
-                screen: "add_additions",
-                data: {
-                  additions: additions,
-                  item_label: item_label,
-                  choosen_item: `${item.id}`,
-                },
-              },
-            },
-          },
-        };
-      }
-    }
-
-
-
-
-    console.log({ data }, "teeeeeeeeeeeeeeest");
-    try {
-      const wa_res = await axiosHelper.post(url, data);
-      console.log("000000", {
-        wa_res: wa_res.data.messages[0],
-      });
-    } catch (err) {
-      console.log({ err });
-    }
-  } else if (inputData.type === "save_additions") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
-
-    const item = shara.card.find(cardItem => cardItem.id === parseInt(inputData.choosen_item));
-    if (!item) return;
-
-    let apiData;
-    let dataPush = [];
-    let item_price = 0;
-
-    try {
-      const response = await axios.get(`https://alsharashoping.com/api/products/${parseInt(item.meal_id)}`);
-      apiData = response.data.data.additions;
-    } catch (error) {
-      console.log("Error fetching data from API:", error);
-      return;
-    }
-
-    for (let m = 0; m < apiData.length; m++) {
-      for (let a = 0; a < inputData.additions.length; a++) {
-        if (apiData[m].id == parseInt(inputData.additions[a])) {
-          item_price += parseFloat(apiData[m].price);
-          const newRow = {
-            addition_id: apiData[m].id,
-            addition_name: shara.language === 'ar' ? apiData[m].name_ar : apiData[m].name || apiData[m].name_ar,
-            addition_price: apiData[m].price,
-          };
-          dataPush.push(newRow);
-        }
-      }
-    }
-
-    item.meal_price += parseFloat(item_price || 0);
-    item.additions_price += parseFloat(item_price || 0);
-    item.additions = dataPush;
-    shara.markModified('card');
-
-    try {
-      await shara.save();
-      console.log("Data saved successfully");
-
-      const wellcomeData = {
-        from: "00",
-        to: inputData.phone_number,
-        phone_number: inputData.phone_number,
-        type: "show_card",
-      };
-      await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-
-    } catch (error) {
-      console.log("Error saving data:", error);
-      const errorData = {
-        from: "00",
-        to: inputData.phone_number,
-        phone_number: inputData.phone_number,
-        type: "text",
-        content: shara.language === 'ar' ?
-          "حدث خطأ أثناء حفظ البيانات. يرجى المحاولة مرة أخرى." :
-          "An error occurred while saving your data. Please try again.",
-      };
-      await sendToWhatsapp.sendToWhatsapp(errorData);
-    }
-  } else if (inputData.type === "start_service_template") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
-    let components = [];
-
-    data.type = "template";
-    data.recipient_type = "individual";
-    data.to = inputData.to;
-
-    if (shara.language === 'ar') {
-      data.template = {
-        name: "flow_start_service",
-        language: {
-          code: "ar",
-        },
-        components,
-      };
-    }
-    else {
-      data.template = {
-        name: "flow_start_service",
-        language: {
-          code: "en_US",
-        },
-        components,
-      };
-    }
-
-
-
-    console.log({ data }, "teeeeeeeeeeeeeeest");
-    try {
-      const wa_res = await axiosHelper.post(url, data);
-      console.log("000000", {
-        wa_res: wa_res.data.messages[0],
-      });
-    } catch (err) {
-      console.log({ err });
-    }
-    // });
-    // });
-  } else if (inputData.type === "start_service_flow") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
-
-    const categories = [
-      {
-        id: "1",
-        title: "التحدث مع خدمة العملاء",
-      },
-      {
-        id: "2",
-        title: "التسوق عبر الواتساب",
-      },
-      {
-        id: "3",
-        title: "الاسئلة الشائعة",
-      },
-      {
-        id: "4",
-        title: "مواقع متاجرنا",
-      },
-    ];
-    const categories_en = [
-      {
-        id: "1",
-        title: "Speak to customer service",
-      },
-      {
-        id: "2",
-        title: "Shopping via WhatsApp",
-      },
-      {
-        id: "3",
-        title: "Frequently Asked Question",
-      },
-      {
-        id: "4",
-        title: "Our Store Locations",
-      },
-    ];
-
-
-    data.type = "interactive";
-    data.recipient_type = "individual";
-    data.to = inputData.to;
-
-
-    if (shara.language === 'ar') {
-      data.interactive = {
-        type: "flow",
-        body: {
-          text: "قم بإختيار الخدمة",
-        },
-        action: {
-          name: "flow",
-          parameters: {
-            // mode: "draft",
-            mode: "published",
-            flow_message_version: "3",
-            flow_token: "1949975815446699",
-            flow_id: "1949975815446699",
-            flow_cta: "الخدمات",
-            flow_action: "navigate",
-            flow_action_payload: {
-              screen: "flow_start_service",
-              data: {
-                categories: categories,
-              },
-            },
-          },
-        },
-      };
-    }
-    else {
-      data.interactive = {
-        type: "flow",
-        body: {
-          text: "Choose the service",
-        },
-        action: {
-          name: "flow",
-          parameters: {
-            // mode: "draft",
-            mode: "published",
-            flow_message_version: "3",
-            flow_token: "1177618739973984",
-            flow_id: "1177618739973984",
-            flow_cta: "services",
-            flow_action: "navigate",
-            flow_action_payload: {
-              screen: "flow_start_service",
-              data: {
-                categories: categories_en,
-              },
-            },
-          },
-        },
-      };
-    }
-
-
-
-    console.log({ data }, "teeeeeeeeeeeeeeest");
-    try {
-      const wa_res = await axiosHelper.post(url, data);
-      console.log("000000", {
-        wa_res: wa_res.data.messages[0],
-      });
-    } catch (err) {
-      console.log({ err });
-    }
   } else if (inputData.type === "change_status") {
     let components = [];
     data.type = "template";
@@ -4154,26 +3402,17 @@ exports.sendToWhatsapp = async (inputData) => {
     data.to = inputData.to;
 
     data.template = {
-      name: "flow_change_status2",
+      name: "flow_change_status",
       language: {
         code: "ar",
       },
       components: [
         {
-          type: "header",
-          parameters: [
-            {
-              type: "text",
-              text: inputData.order_id,
-            },
-          ],
-        },
-        {
           type: "body",
           parameters: [
             {
               type: "text",
-              text: inputData.name,
+              text: inputData.order_id,
             },
             {
               type: "text",
@@ -4215,26 +3454,17 @@ exports.sendToWhatsapp = async (inputData) => {
     data.to = inputData.to;
 
     data.template = {
-      name: "flow_change_status2",
+      name: "flow_change_status",
       language: {
         code: "en",
       },
       components: [
         {
-          type: "header",
-          parameters: [
-            {
-              type: "text",
-              text: inputData.order_id,
-            },
-          ],
-        },
-        {
           type: "body",
           parameters: [
             {
               type: "text",
-              text: inputData.name,
+              text: inputData.order_id,
             },
             {
               type: "text",
@@ -4270,7 +3500,7 @@ exports.sendToWhatsapp = async (inputData) => {
 
     // });
   } else if (inputData.type === "change_status_delivered") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
     let components = [];
     data.type = "template";
@@ -4278,26 +3508,17 @@ exports.sendToWhatsapp = async (inputData) => {
     data.to = inputData.to;
 
     data.template = {
-      name: "flow_change_status_delivered2",
+      name: "flow_change_status_delivered",
       language: {
-        code: shara.language === 'ar' ? "ar" : "en",
+        code: holistic.language === 'ar' ? "ar" : "en",
       },
       components: [
-        {
-          type: "header",
-          parameters: [
-            {
-              type: "text",
-              text: inputData.order_id,
-            },
-          ],
-        },
         {
           type: "body",
           parameters: [
             {
               type: "text",
-              text: inputData.name,
+              text: inputData.order_id,
             },
             {
               type: "text",
@@ -4333,9 +3554,9 @@ exports.sendToWhatsapp = async (inputData) => {
 
     // });
   } else if (inputData.type === "flow_pdf") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let language = "ar";
-    if (shara && shara.language !== 'ar') {
+    if (holistic && holistic.language !== 'ar') {
       language = 'en';
     }
 
@@ -4389,16 +3610,16 @@ exports.sendToWhatsapp = async (inputData) => {
 
     // });
   } else if (inputData.type === "show_categories") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
-    shara.status = "choose_items",
-      await shara.save();
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
+    holistic.status = "choose_items",
+      await holistic.save();
     let categories = [];
     let apiData = [];
 
     let config2 = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: 'https://alsharashoping.com/api/categories',
+      url: 'https://holistic.nassatrading.com/api/categories',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -4455,7 +3676,7 @@ exports.sendToWhatsapp = async (inputData) => {
     for (let i = 0; i < apiData.length; i++) {
       const category = apiData[i];
       const base64Image = await convertImageToBase64(category.Category_Icon);
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         const newRow = {
           id: `${category.id}`,
           title: category.fr_Category_Name,
@@ -4475,7 +3696,7 @@ exports.sendToWhatsapp = async (inputData) => {
     }
 
     if (categories.length == 0) {
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         const wellcomeData = {
           from: "00",
           to: inputData.phone_number,
@@ -4500,7 +3721,7 @@ exports.sendToWhatsapp = async (inputData) => {
       data.type = "interactive";
       data.recipient_type = "individual";
       data.to = inputData.to;
-      if (shara.language === 'ar') {
+      if (holistic.language === 'ar') {
         data.interactive = {
           type: "flow",
           body: {
@@ -4567,12 +3788,12 @@ exports.sendToWhatsapp = async (inputData) => {
       console.log({ err });
     }
   } else if (inputData.type === "active") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
     data.type = "interactive";
     data.recipient_type = "individual";
     data.to = inputData.to;
-    if (shara.language === 'ar') {
+    if (holistic.language === 'ar') {
       data.interactive = {
         type: "button",
         body: {
@@ -4624,7 +3845,7 @@ exports.sendToWhatsapp = async (inputData) => {
     // });
     // });
   } else if (inputData.type === "payment_pdf_template") {
-    // let shara = await OrderID.findOne({ from: inputData.phone_number });
+    // let holistic = await OrderID.findOne({ from: inputData.phone_number });
 
     let components = [];
     data.type = "template";
@@ -4687,9 +3908,9 @@ exports.sendToWhatsapp = async (inputData) => {
 
     // });
   } else if (inputData.type === "flow_catalog_display") {
-    let shara = await OrderID.findOne({ from: inputData.phone_number });
+    let holistic = await OrderID.findOne({ from: inputData.phone_number });
     let language = "ar";
-    if (shara && shara.language !== 'ar') {
+    if (holistic && holistic.language !== 'ar') {
       language = 'en';
     }
 
@@ -4699,7 +3920,7 @@ exports.sendToWhatsapp = async (inputData) => {
     data.to = inputData.to;
 
     data.template = {
-      name: "flow_catalog_display2",
+      name: "flow_catalog_display",
       language: {
         code: language,
       },
@@ -4744,7 +3965,7 @@ exports.sendToWhatsapp = async (inputData) => {
     let config2 = {
       method: 'get',
       maxBodyLength: Infinity,
-      url: 'https://alsharashoping.com/api/products?per_page=9999',
+      url: 'https://holistic.nassatrading.com/api/products?per_page=9999',
       headers: {}
     };
 

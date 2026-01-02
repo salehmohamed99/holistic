@@ -50,7 +50,6 @@ const OrderIDSchema = new mongoose.Schema(
     address_counter: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },
     total: { type: Number, default: 0 },
-    total_weight: { type: Number, default: 0 },
     same_card: { type: Number, default: 0 },
 
 
