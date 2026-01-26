@@ -202,8 +202,8 @@ exports.sendToWhatsapp = async (inputData) => {
             // mode: "draft",
             mode: "published",
             flow_message_version: "3",
-            flow_token: holistic.name === '' ? "1743409142729679" : "1724539328502091",
-            flow_id: holistic.name === '' ? "1743409142729679" : "1724539328502091",
+            flow_token: holistic.name === '' ? "2100070610825267" : "1724539328502091",
+            flow_id: holistic.name === '' ? "2100070610825267" : "1724539328502091",
             flow_cta: "تسجيل الدخول",
             flow_action: "navigate",
             flow_action_payload: {
@@ -229,15 +229,15 @@ exports.sendToWhatsapp = async (inputData) => {
             // mode: "draft",
             mode: "published",
             flow_message_version: "3",
-            flow_token: holistic.name === '' ? "854659986604079" : "3754004011582057",
-            flow_id: holistic.name === '' ? "854659986604079" : "3754004011582057",
+            flow_token: holistic.name === '' ? "1451276799758766" : "1424404635970380",
+            flow_id: holistic.name === '' ? "1451276799758766" : "1424404635970380",
             flow_cta: "Sign In",
             flow_action: "navigate",
             flow_action_payload: {
               screen: "SIGN_IN",
               data: {
-                default_code: country_code,
-                default_phone: new_phone_without_code,
+                default_code: Number(country_code),
+                default_phone: Number(new_phone_without_code),
               },
             },
           },
@@ -1332,8 +1332,8 @@ exports.sendToWhatsapp = async (inputData) => {
             // mode: "draft",
             mode: "published",
             flow_message_version: "3",
-            flow_token: "1154420158993406",
-            flow_id: "1154420158993406",
+            flow_token: "1949184135998810",
+            flow_id: "1949184135998810",
             flow_cta: "Add address",
             flow_action: "navigate",
             flow_action_payload: {
@@ -1489,8 +1489,8 @@ exports.sendToWhatsapp = async (inputData) => {
             // mode: "draft",
             mode: "published",
             flow_message_version: "3",
-            flow_token: "1198325044769888",
-            flow_id: "1198325044769888",
+            flow_token: "1531403498072617",
+            flow_id: "1531403498072617",
             flow_cta: "States",
             flow_action: "navigate",
             flow_action_payload: {
@@ -1644,8 +1644,8 @@ exports.sendToWhatsapp = async (inputData) => {
             // mode: "draft",
             mode: "published",
             flow_message_version: "3",
-            flow_token: "819689473328032",
-            flow_id: "819689473328032",
+            flow_token: "1388105669386167",
+            flow_id: "1388105669386167",
             flow_cta: "addresses",
             flow_action: "navigate",
             flow_action_payload: {
@@ -1924,8 +1924,8 @@ exports.sendToWhatsapp = async (inputData) => {
               // mode: "draft",
               mode: "published",
               flow_message_version: "3",
-              flow_token: "536074965512119",
-              flow_id: "536074965512119",
+              flow_token: "4221790934753858",
+              flow_id: "4221790934753858",
               flow_cta: "إختيار",
               flow_action: "navigate",
               flow_action_payload: {
@@ -1950,8 +1950,8 @@ exports.sendToWhatsapp = async (inputData) => {
               // mode: "draft",
               mode: "published",
               flow_message_version: "3",
-              flow_token: "1154777235632035",
-              flow_id: "1154777235632035",
+              flow_token: "1232559058764528",
+              flow_id: "1232559058764528",
               flow_cta: "Choose",
               flow_action: "navigate",
               flow_action_payload: {
@@ -2039,7 +2039,7 @@ exports.sendToWhatsapp = async (inputData) => {
     for (let i = 0; i < inputData.product_items.length; i++) {
       const item = inputData.product_items[i];
       let item_id;
-      if (holistic.language === 'en' || (item.product_retailer_id.length === 7 && item.product_retailer_id.endsWith('000'))) {
+      if ((holistic.language === 'en' && item.product_retailer_id.endsWith('000')) || (item.product_retailer_id.length === 7 && item.product_retailer_id.endsWith('000'))) {
         item_id = item.product_retailer_id.slice(0, -3);
       } else {
         item_id = item.product_retailer_id;

@@ -140,45 +140,40 @@ exports.postHandler = async (req, res) => {
             } else {
               console.log("no token bloc");
 
-              // try {
-              //   holistic = await OrderID.findOneAndUpdate(
-              //     { from: from },
-              //     {
-              //       $set: {
-              //         wa_msg_id: wa_msg_id,
-              //         order_date: "",
-              //         order_time: "",
-              //         card: [],
-              //         choosen_address: "",
-              //         isGift: false,
-              //         is_delivery: false,
-              //         delivery_price: "",
-              //         is_now: false,
-              //         total_price: "",
-              //         order_id: "",
-              //         address: "",
-              //         branch_id: "",
-              //         offers: [],
-              //         offers_counter: 0,
-              //         to_verified: false,
-              //         country_code: "",
-              //         phone: "",
-              //         items_counter: 0,
-              //         status: "",
-              //         init_card_counter: 0,
-              //         init_card: [],
-              //         items_length: 0,
-              //         tax: 0,
-              //         total: 0,
-              //         same_card: 0,
-              //       },
-              //     },
-              //     { new: true, upsert: true }
-              //   );
-              //   console.log("✅ holistic updated/created:", holistic);
-              // } catch (err) {
-              //   console.error("❌ Error in findOneAndUpdate:", err);
-              // }
+              holistic = await OrderID.findOneAndUpdate(
+                { from: from },
+                {
+                  $set: {
+                    wa_msg_id: wa_msg_id,
+                    order_date: "",
+                    order_time: "",
+                    card: [],
+                    choosen_address: "",
+                    isGift: false,
+                    is_delivery: false,
+                    delivery_price: "",
+                    is_now: false,
+                    total_price: "",
+                    order_id: "",
+                    address: "",
+                    branch_id: "",
+                    offers: [],
+                    offers_counter: 0,
+                    to_verified: false,
+                    country_code: "",
+                    phone: "",
+                    items_counter: 0,
+                    status: "",
+                    init_card_counter: 0,
+                    init_card: [],
+                    items_length: 0,
+                    tax: 0,
+                    total: 0,
+                    same_card: 0,
+                  },
+                },
+                { new: true, upsert: true }
+              );
 
               const wellcomeData = {
                 from: "00",
@@ -273,7 +268,7 @@ exports.postHandler = async (req, res) => {
                 from: "00",
                 to: from,
                 phone_number: from,
-                type: "show_categories",
+                type: "flow_catalog_display",
               };
 
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
@@ -686,8 +681,8 @@ exports.postHandler = async (req, res) => {
             );
 
             if (
-              response_json.flow_token === "1743409142729679" ||
-              response_json.flow_token === "854659986604079"
+              response_json.flow_token === "2100070610825267" ||
+              response_json.flow_token === "1451276799758766"
             ) {
               holistic.to_verified = true;
               holistic.country_code = response_json.country_code;
@@ -706,7 +701,7 @@ exports.postHandler = async (req, res) => {
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (
               response_json.flow_token === "1724539328502091" ||
-              response_json.flow_token === "3754004011582057"
+              response_json.flow_token === "1424404635970380"
             ) {
               holistic.to_verified = true;
               holistic.country_code = response_json.country_code;
@@ -840,8 +835,8 @@ exports.postHandler = async (req, res) => {
               };
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (
-              response_json.flow_token === "536074965512119" ||
-              response_json.flow_token === "1154777235632035"
+              response_json.flow_token === "4221790934753858" ||
+              response_json.flow_token === "1232559058764528"
             ) {
               const wellcomeData = {
                 from: "00",
@@ -853,7 +848,7 @@ exports.postHandler = async (req, res) => {
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (
               response_json.flow_token === "755127513661641" ||
-              response_json.flow_token === "1154420158993406"
+              response_json.flow_token === "1949184135998810"
             ) {
               let length = holistic.address_counter;
               const newAddress = {
@@ -878,7 +873,7 @@ exports.postHandler = async (req, res) => {
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (
               response_json.flow_token === "2246968399158766" ||
-              response_json.flow_token === "1198325044769888"
+              response_json.flow_token === "1531403498072617"
             ) {
               let country;
               for (let index = 0; index < holistic.addresses.length; index++) {
@@ -906,7 +901,7 @@ exports.postHandler = async (req, res) => {
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (
               response_json.flow_token === "4137540806459509" ||
-              response_json.flow_token === "819689473328032"
+              response_json.flow_token === "1388105669386167"
             ) {
               let state;
               let city;
