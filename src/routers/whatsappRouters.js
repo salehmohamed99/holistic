@@ -1,81 +1,15 @@
 const express = require("express");
 const multer = require('multer');
 const router = express.Router();
-const sendToWhatsapp = require("../controller/sendToWhatsapp");
+sendToWhatsapp = require("../controllers/sendToWhatsapp");
 const OrderID = require("../models/OrderIDModel");
-
-
-router.post("/send_otp", async (req, res) => {
-    let phone_number = req.body.phone_number;
-    const otp = req.body.otp;
-
-    try {
-
-        if (!phone_number) {
-            console.log("phone_number Required");
-            return res.status(400).send({ error: true, message: "phone_number Required" });
-        }
-        if (!otp) {
-            console.log("otp Required");
-            return res.status(400).send({ error: true, message: "otp Required" });
-        }
-
-        let holistic = await OrderID.findOne({ from: phone_number });
-
-        if (holistic && holistic.to_verified == true && holistic.country_code && holistic.phone) {
-            const wellcomeData3 = {
-                from: "00",
-                to: phone_number,
-                phone_number: phone_number,
-                country_code: holistic.country_code,
-                phone: holistic.phone,
-                otp: otp,
-                type: "confirm_otp",
-            };
-
-            await sendToWhatsapp.sendToWhatsapp(wellcomeData3);
-        } else {
-            const wellcomeData2 = {
-                from: "00",
-                to: phone_number,
-                phone_number: phone_number,
-                otp: otp,
-                type: "otp",
-            };
-            await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
-        }
-
-
-
-
-
-
-        return res.send({
-            error: false,
-            message: "Message sent successfully!",
-        });
-    } catch (error) {
-        console.error("Error occurred:", error);
-        return res.status(500).send({ error: true, message: "Internal server error" });
-    }
-});
 
 
 router.post("/success/payment", async (req, res) => {
     let phone_number = req.body.phone_number;
-    const booking_id = req.body.booking_id;
-    let pdf = req.body.pdf;
     console.log("/success/payment");
 
     try {
-        if (!pdf) {
-            console.log("No PDF file uploaded");
-            // return res.status(400).send({ error: true, message: "No PDF file uploaded" });
-            pdf = "https://cdn.glitch.global/61abb0ec-32ba-4829-9ac4-c31699e487d3/test.pdf?v=1713121459295";
-        } else {
-            console.log("pdf", pdf);
-            // pdf = "https://delipizza.online" + pdf;
-        }
 
         if (!phone_number) {
             console.log("phone_number Required");
@@ -83,179 +17,36 @@ router.post("/success/payment", async (req, res) => {
         }
 
         console.log("phone_number", phone_number);
-        phone_number = phone_number.replace("+", "");
-        console.log("phone_number", phone_number);
 
+        let wadi_zaka = await OrderID.findOne({ from: { $regex: phone_number, $options: "i" } });
 
-        if (!booking_id) {
-            console.log("booking_id Required");
-            return res.status(400).send({ error: true, message: "booking_id Required" });
-        }
-        console.log("booking_id", booking_id);
-
-        let holistic = await OrderID.findOne({ from: { $regex: phone_number, $options: "i" } });
-
-        if (!holistic) {
+        if (!wadi_zaka) {
             return res
                 .status(404)
                 .send({ error: true, message: "User not found" });
         }
 
-        holistic.order_id = booking_id;
-        holistic.is_ordered = true;
-        await holistic.save();
 
         const wellcomeData = {
             from: "00",
-            to: holistic.from,
-            phone_number: holistic.from,
-            booking_id: booking_id,
-            filename: "Invoice.pdf",
-            link: pdf,
-            type: "flow_pdf",
+            to: wadi_zaka.from,
+            phone_number: wadi_zaka.from,
+            type: "after_payment_template",
         };
         await sendToWhatsapp.sendToWhatsapp(wellcomeData);
 
-        return res.send({
-            error: false,
-            message: "Message sent successfully!",
-        });
-    } catch (error) {
-        console.error("Error occurred:", error);
-        return res.status(500).send({ error: true, message: "Internal server error" });
-    }
-});
+        await new Promise(resolve => setTimeout(resolve, 8000));
 
-
-router.post("/change_status", async (req, res) => {
-    let phone_number = req.body.phone_number;
-    const booking_id = req.body.booking_id;
-    const status = req.body.status;
-    let url = req.body.url;
-    console.log("/change_status");
-
-    try {
-        if (!phone_number) {
-            console.log("phone_number Required");
-            return res.status(400).send({ error: true, message: "phone_number Required" });
-        }
-        console.log("phone_number", phone_number);
-
-
-        if (!booking_id) {
-            console.log("booking_id Required");
-            return res.status(400).send({ error: true, message: "booking_id Required" });
-        }
-        console.log("booking_id", booking_id);
-
-        if (!status) {
-            console.log("status Required");
-            return res.status(400).send({ error: true, message: "status Required" });
-        }
-        console.log("status", status);
-
-
-        if (!url) {
-            console.log("url Required");
-            return res.status(400).send({ error: true, message: "url Required" });
-        }
-
-
-        url = url.split('/').slice(3).join('/');
-        console.log("url", url);
-
-        let holistic = await OrderID.findOne({ from: { $regex: phone_number, $options: "i" } });
-
-        if (!holistic) {
-            return res
-                .status(404)
-                .send({ error: true, message: "User not found" });
-        }
-
-        if (status.status_ar == "تم التوصيل" && status.status_en == "Delivered") {
-            const wellcomeData2 = {
-                from: "00",
-                to: holistic.from,
-                phone_number: holistic.from,
-                order_id: booking_id,
-                name: holistic.name,
-                status: holistic.language === 'ar' ? status.status_ar : status.status_en,
-                url: url,
-                type: "change_status_delivered",
-            };
-            await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
-        } else {
-            const wellcomeData2 = {
-                from: "00",
-                to: holistic.from,
-                phone_number: holistic.from,
-                order_id: booking_id,
-                name: holistic.name,
-                status: holistic.language === 'ar' ? status.status_ar : status.status_en,
-                url: url,
-                type: holistic.language === 'ar' ? "change_status" : "change_status_en",
-            };
-            await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
-        }
-
-
-
-        return res.send({
-            error: false,
-            message: "Message sent successfully!",
-        });
-    } catch (error) {
-        console.error("Error occurred:", error);
-        return res.status(500).send({ error: true, message: "Internal server error" });
-    }
-});
-
-router.post("/active_flow", async (req, res) => {
-    let phone_number = req.body.phone_number;
-    console.log("/active_flow");
-
-    try {
-        if (!phone_number) {
-            console.log("phone_number Required");
-            return res.status(400).send({ error: true, message: "phone_number Required" });
-        }
-
-        console.log("phone_number", phone_number);
-
-        let holistic = await OrderID.findOne({ from: { $regex: phone_number, $options: "i" } });
-
-        if (!holistic) {
-            return res.status(400).send({ error: true, message: "User Not Found" });
-        }
-
-        holistic.chat = "of";
-        await holistic.save();
-
-
-
-        const content = holistic.language === 'ar'
-            ? "تم الرجوع الى الخدمة التلقائية"
-            : "The automatic service has been returned";
 
         const wellcomeData2 = {
             from: "00",
-            to: phone_number,
-            phone_number: phone_number,
-            content,
+            to: wadi_zaka.from,
+            phone_number: wadi_zaka.from,
+            content: "إذا أعجبتك خدمة التبرع بالواتساب ، شارك بها الآخرين \n http://wa.me/+96899313169",
             type: "text",
         };
-
         await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
 
-
-        const wellcomeData = {
-            from: "00",
-            to: phone_number,
-            phone_number: phone_number,
-            type: "select_language",
-        };
-        await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-
         return res.send({
             error: false,
             message: "Message sent successfully!",
@@ -265,84 +56,6 @@ router.post("/active_flow", async (req, res) => {
         return res.status(500).send({ error: true, message: "Internal server error" });
     }
 });
-
-router.post("/payment_pdf", async (req, res) => {
-    let phone_number = req.body.phone_number;
-    let pdf = req.body.pdf;
-    let url = req.body.payment_url;
-    let price = req.body.price;
-    let language = req.body.language;
-    let created_by = req.body.created_by;
-
-    console.log("/payment_pdf");
-
-    try {
-        if (!pdf) {
-            console.log("No PDF file uploaded");
-            // return res.status(400).send({ error: true, message: "No PDF file uploaded" });
-            pdf = "https://cdn.glitch.global/61abb0ec-32ba-4829-9ac4-c31699e487d3/test.pdf?v=1713121459295";
-        } else {
-            console.log("pdf", pdf);
-        }
-
-        if (!phone_number) {
-            console.log("phone_number Required");
-            return res.status(400).send({ error: true, message: "phone_number Required" });
-        }
-
-        console.log("phone_number", phone_number);
-
-        if (!url) {
-            console.log("url Required");
-            return res.status(400).send({ error: true, message: "url Required" });
-        }
-        console.log("url", url);
-        url = url.split('/pay/')[1];
-        console.log("url after edit", url);
-
-        if (!price) {
-            console.log("price Required");
-            return res.status(400).send({ error: true, message: "price Required" });
-        }
-        console.log("price", price);
-
-        if (!language) {
-            console.log("language Required");
-            return res.status(400).send({ error: true, message: "language Required" });
-        }
-        console.log("language", language);
-
-        if (!created_by) {
-            console.log("created_by Required");
-            return res.status(400).send({ error: true, message: "created_by Required" });
-        }
-        console.log("created_by", created_by);
-
-        const wellcomeData = {
-            from: "00",
-            to: phone_number,
-            phone_number,
-            filename: "Invoice.pdf",
-            link: pdf,
-            price,
-            url,
-            language,
-            created_by,
-            type: "payment_pdf_template",
-        };
-        await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-
-        return res.send({
-            error: false,
-            message: "Message sent successfully!",
-        });
-    } catch (error) {
-        console.error("Error occurred:", error);
-        return res.status(500).send({ error: true, message: "Internal server error" });
-    }
-});
-
-
 
 
 module.exports = router;
