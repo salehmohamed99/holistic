@@ -7,9 +7,18 @@ const OrderID = require("../models/OrderIDModel");
 
 router.post("/success/payment", async (req, res) => {
     let phone_number = req.body.phone_number;
+    const booking_id = req.body.booking_id;
+    let pdf = req.body.pdf;
     console.log("/success/payment");
 
     try {
+
+        if (!pdf) {
+            console.log("PDF file Required");
+            return res.status(400).send({ error: true, message: "PDF file Required" });
+        }
+
+        console.log("pdf", pdf);
 
         if (!phone_number) {
             console.log("phone_number Required");
@@ -18,34 +27,25 @@ router.post("/success/payment", async (req, res) => {
 
         console.log("phone_number", phone_number);
 
-        let wadi_zaka = await OrderID.findOne({ from: { $regex: phone_number, $options: "i" } });
-
-        if (!wadi_zaka) {
-            return res
-                .status(404)
-                .send({ error: true, message: "User not found" });
+        if (!booking_id) {
+            console.log("booking_id Required");
+            return res.status(400).send({ error: true, message: "booking_id Required" });
         }
+        console.log("booking_id", booking_id);
+
+        let hispeed = await OrderID.findOne({ from: { $regex: phone_number, $options: "i" } });
 
 
         const wellcomeData = {
             from: "00",
-            to: wadi_zaka.from,
-            phone_number: wadi_zaka.from,
-            type: "after_payment_template",
+            to: hispeed.from ? hispeed.from : phone_number,
+            phone_number: hispeed.from ? hispeed.from : phone_number,
+            booking_id: booking_id,
+            filename: "Invoice.pdf",
+            link: pdf,
+            type: "flow_pdf",
         };
         await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-
-        await new Promise(resolve => setTimeout(resolve, 8000));
-
-
-        const wellcomeData2 = {
-            from: "00",
-            to: wadi_zaka.from,
-            phone_number: wadi_zaka.from,
-            content: "إذا أعجبتك خدمة التبرع بالواتساب ، شارك بها الآخرين \n http://wa.me/+96899313169",
-            type: "text",
-        };
-        await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
 
         return res.send({
             error: false,
@@ -56,6 +56,5 @@ router.post("/success/payment", async (req, res) => {
         return res.status(500).send({ error: true, message: "Internal server error" });
     }
 });
-
 
 module.exports = router;
