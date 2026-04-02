@@ -16,6 +16,7 @@ const WebhookLogController = require("./WebhookLogController");
 const path = require("path");
 const { log } = require("console");
 const { title } = require("process");
+const e = require("express");
 exports.postHandler = async (req, res) => {
   console.log(JSON.stringify(req.body, null, 2));
   try {
@@ -159,44 +160,46 @@ exports.postHandler = async (req, res) => {
             } else {
               console.log("no token bloc");
 
-              try {
-                hispeed = await OrderID.findOneAndUpdate(
-                  { from: from },
-                  {
-                    $set: {
-                      wa_msg_id: wa_msg_id,
-                      order_date: "",
-                      order_time: "",
-                      card: [],
-                      choosen_address: "",
-                      isGift: false,
-                      is_delivery: false,
-                      delivery_price: "",
-                      is_now: false,
-                      total_price: "",
-                      order_id: "",
-                      address: "",
-                      branch_id: "",
-                      offers: [],
-                      offers_counter: 0,
-                      to_verified: false,
-                      country_code: "",
-                      phone: "",
-                      items_counter: 0,
-                      status: "",
-                      init_card_counter: 0,
-                      init_card: [],
-                      items_length: 0,
-                      tax: 0,
-                      total: 0,
-                      same_card: 0,
+              if (hispeed.card.length == 0) {
+                try {
+                  hispeed = await OrderID.findOneAndUpdate(
+                    { from: from },
+                    {
+                      $set: {
+                        wa_msg_id: wa_msg_id,
+                        order_date: "",
+                        order_time: "",
+                        card: [],
+                        choosen_address: "",
+                        isGift: false,
+                        is_delivery: false,
+                        delivery_price: "",
+                        is_now: false,
+                        total_price: "",
+                        order_id: "",
+                        address: "",
+                        branch_id: "",
+                        offers: [],
+                        offers_counter: 0,
+                        to_verified: false,
+                        country_code: "",
+                        phone: "",
+                        items_counter: 0,
+                        status: "",
+                        init_card_counter: 0,
+                        init_card: [],
+                        items_length: 0,
+                        tax: 0,
+                        total: 0,
+                        same_card: 0,
+                      },
                     },
-                  },
-                  { new: true, upsert: true }
-                );
-                console.log("✅ hispeed updated/created:", hispeed);
-              } catch (err) {
-                console.error("❌ Error in findOneAndUpdate:", err);
+                    { new: true, upsert: true }
+                  );
+                  console.log("✅ hispeed updated/created:", hispeed);
+                } catch (err) {
+                  console.error("❌ Error in findOneAndUpdate:", err);
+                }
               }
 
               const wellcomeData = {
@@ -243,25 +246,7 @@ exports.postHandler = async (req, res) => {
               req.body.entry[0].changes[0].value.messages[0].interactive
                 .button_reply.title;
 
-            if (title == "إضافات لمنتج" || title == "Add-ons to a product") {
-              const wellcomeData = {
-                from: "00",
-                to: from,
-                phone_number: from,
-                type: "show_items_have_additions",
-              };
-
-              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-            } else if (title == "حذف / إضافات" || title == "Delete / Additions") {
-              const wellcomeData = {
-                from: "00",
-                to: from,
-                phone_number: from,
-                type: "edit_option",
-              };
-
-              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-            } else if (title == "حذف منتج" || title == "Delete a product") {
+            if (title == "حذف منتج" || title == "Delete a product") {
               hispeed.status = "delete_item";
               await hispeed.save();
 
@@ -274,24 +259,36 @@ exports.postHandler = async (req, res) => {
 
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (title == "إستمرار" || title == "continuation") {
-              if (hispeed.addresses.length > 0) {
+              if (parseFloat(hispeed.total_price).toFixed(3) < 3.99) {
                 const wellcomeData = {
                   from: "00",
                   to: from,
                   phone_number: from,
-                  type: "default_address",
+                  content: hispeed.language === "ar" ? "أقل سعر للطلب 3.99 ر.ع \n يمكنك إضافة منتجات أخري" : "The minimum order price is 3.99 OMR \n You can add other products",
+                  type: "text",
                 };
-
                 await sendToWhatsapp.sendToWhatsapp(wellcomeData);
               } else {
-                const wellcomeData = {
-                  from: "00",
-                  to: from,
-                  phone_number: from,
-                  type: "add_address",
-                };
 
-                await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+                if (hispeed.addresses.length > 0) {
+                  const wellcomeData = {
+                    from: "00",
+                    to: from,
+                    phone_number: from,
+                    type: "default_address",
+                  };
+
+                  await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+                } else {
+                  const wellcomeData = {
+                    from: "00",
+                    to: from,
+                    phone_number: from,
+                    type: "add_address",
+                  };
+
+                  await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+                }
               }
             } else if (title == "العنوان صحيح ؟" || title == "Address is correct ?") {
               hispeed.choosen_address = hispeed.addresses[0].id;
@@ -331,8 +328,7 @@ exports.postHandler = async (req, res) => {
                   from: "00",
                   to: from,
                   phone_number: from,
-
-                  content: hispeed.language === "ar" ? "يوجد لديك طلب مسبق" : "You have a previous order",
+                  content: hispeed.language === "ar" ? "يوجد لديك طلب مسبق \n يرجى الطلب من البداية" : "You have a previous order \n Please request from the beginning",
                   type: "text",
                 };
                 await sendToWhatsapp.sendToWhatsapp(wellcomeData);
@@ -355,7 +351,7 @@ exports.postHandler = async (req, res) => {
                   to: from,
                   phone_number: from,
 
-                  content: hispeed.language === "ar" ? "يوجد لديك طلب مسبق" : "You have a previous order",
+                  content: hispeed.language === "ar" ? "يوجد لديك طلب مسبق \n يرجى الطلب من البداية" : "You have a previous order \n Please request from the beginning",
                   type: "text",
                 };
                 await sendToWhatsapp.sendToWhatsapp(wellcomeData);
@@ -474,88 +470,6 @@ exports.postHandler = async (req, res) => {
                 to: from,
                 phone_number: from,
                 type: "sign_in_flow",
-              };
-              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-            } else if (
-              title == "تصفح الكتالوج" ||
-              title == "Browse Catalog"
-            ) {
-              const wellcomeData2 = {
-                from: "00",
-                to: from,
-                phone_number: from,
-                content:
-                  hispeed.language === "ar"
-                    ? "يرجى الانتظار قليلا الى حين تجهيز البيانات"
-                    : "Please wait a little while the data is being processed.",
-                type: "text",
-              };
-              await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
-
-              const wellcomeData = {
-                from: "00",
-                to: from,
-                phone_number: from,
-                type: "flow_catalog_display",
-              };
-              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-            } else if (
-              title == "الاسئلة الشائعة" ||
-              title == "Common Questions"
-            ) {
-              // const wellcomeData = {
-              //   from: "00",
-              //   to: from,
-              //   phone_number: from,
-              //   type: "sign_in_flow",
-              // };
-              // await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-            } else if (title == "مواقع متاجرنا" || title == "Store Locations") {
-              const wellcomeData2 = {
-                from: "00",
-                to: from,
-                phone_number: from,
-                content:
-                  hispeed.language === "ar"
-                    ? "يرجى الانتظار قليلا الى حين تجهيز بيانات المحل"
-                    : "Please wait a moment while the store data is being processed.",
-                type: "text",
-              };
-              await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
-
-              const wellcomeData = {
-                from: "00",
-                to: from,
-                phone_number: from,
-                type: "shop_details_template",
-              };
-              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-            } else if (
-              title == "المزيد عن الشرع" ||
-              title == "More about hispeed"
-            ) {
-              const wellcomeData = {
-                from: "00",
-                to: from,
-                phone_number: from,
-                type: "more_about_hispeed",
-              };
-              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
-            } else if (
-              title == "التسوق الإلكتروني" ||
-              title == "Online shopping"
-            ) {
-              const content =
-                hispeed.language === "ar"
-                  ? "*يمكنك التسوق عبر متجرنا الإلكترونى من خلال الرابط التالى* \n https://alhispeedshoping.com"
-                  : "*You can shop through our online store through the following link* \n https://alhispeedshoping.com";
-
-              const wellcomeData = {
-                from: "00",
-                to: from,
-                phone_number: from,
-                content: content,
-                type: "text",
               };
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             }

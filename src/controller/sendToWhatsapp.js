@@ -354,8 +354,7 @@ exports.sendToWhatsapp = async (inputData) => {
     let hispeed = await OrderID.findOne({ from: inputData.phone_number });
 
     let data = JSON.stringify({
-      "login_id": inputData.phone_number,
-      "password": '123456',
+      "phone": inputData.phone_number
     });
 
     let config = {
@@ -475,8 +474,40 @@ exports.sendToWhatsapp = async (inputData) => {
           console.log(`Unexpected response status: ${response.status}`);
         }
       })
-      .catch((error) => {
-        console.log(error);
+      .catch(async (error) => {
+        const statusCode = error?.response?.status;
+        const phoneErrors = error?.response?.data?.errors?.phone;
+        const alreadyTaken =
+          statusCode === 422 &&
+          Array.isArray(phoneErrors) &&
+          phoneErrors.some(
+            (msg) =>
+              typeof msg === "string" && msg.toLowerCase().includes("already been taken")
+          );
+
+        if (alreadyTaken) {
+          const infoData = {
+            from: "00",
+            to: inputData.phone_number,
+            phone_number: inputData.phone_number,
+            content: hispeed.language === 'ar'
+              ? "الرقم مسجل مسبقاً، سيتم تحويلك إلى تسجيل الدخول"
+              : "This number is already registered. Redirecting you to sign in.",
+            type: "text",
+          };
+          await sendToWhatsapp.sendToWhatsapp(infoData);
+
+          const loginFlowData = {
+            from: "00",
+            to: inputData.phone_number,
+            phone_number: inputData.phone_number,
+            type: "sign_in_flow",
+          };
+          await sendToWhatsapp.sendToWhatsapp(loginFlowData);
+          return;
+        }
+
+        console.log(error?.response?.data || error);
       });
   } else if (inputData.type === "show_categories") {
     let hispeed = await OrderID.findOne({ from: inputData.phone_number });
@@ -737,14 +768,14 @@ exports.sendToWhatsapp = async (inputData) => {
       for (let i = 0; i < product_items.length; i++) {
         const element = product_items[i];
 
-        // if ([
-        //   "5362", "5451", "5461", "5462", "5492000", "5496000"
-        // ].includes(element.product_retailer_id)) {
-        //   breaks++;
-        //   console.log("count of breaks", breaks);
-        //   console.log("count of breaks", element);
-        //   continue;
-        // }
+        if ([
+          "282"
+        ].includes(element.product_retailer_id)) {
+          breaks++;
+          console.log("count of breaks", breaks);
+          console.log("count of breaks", element);
+          continue;
+        }
 
 
         // [
@@ -899,12 +930,8 @@ exports.sendToWhatsapp = async (inputData) => {
         console.log(error);
       });
 
-    let mealPrice = parseFloat(apiData.price) || parseFloat(apiData.Price) || 0;
+    let mealPrice = parseFloat(apiData.Discount_Price) ? parseFloat(apiData.Discount_Price) : parseFloat(apiData.Price);
 
-    if (parseInt(apiData.Discount) > 0) {
-      let discountPercentage = parseInt(apiData.Discount) / 100;
-      mealPrice = mealPrice - (mealPrice * parseFloat(discountPercentage));
-    }
 
     let existingItem = hispeed.card.find(item =>
       item.meal_id === apiData.id.toString()
@@ -1892,7 +1919,7 @@ exports.sendToWhatsapp = async (inputData) => {
         console.log(JSON.stringify(response.data));
         if (response.data.message == "Payment session created") {
 
-          hispeed.order_id = booking_id;
+          hispeed.order_id = response.data.order_number;
           hispeed.is_ordered = true;
           await hispeed.save();
 
@@ -1920,7 +1947,7 @@ exports.sendToWhatsapp = async (inputData) => {
 
         } else if (response.data.message == "Order created successfully") {
 
-          hispeed.order_id = booking_id;
+          hispeed.order_id = response.data.order_number;
           hispeed.is_ordered = true;
           await hispeed.save();
 
@@ -1928,8 +1955,10 @@ exports.sendToWhatsapp = async (inputData) => {
             from: "00",
             to: inputData.phone_number,
             phone_number: inputData.phone_number,
+            filename: "invoice.pdf",
+            link: response.data.invoice_pdf_url,
             content: hispeed.language === "ar" ? "تم إنشاء الطلب بنجاح \n رقم الطلب: " + response.data.order_number : "Order created successfully" + response.data.order_number,
-            type: "text",
+            type: "pdf",
           };
           await sendToWhatsapp.sendToWhatsapp(wellcomeData);
         } else {

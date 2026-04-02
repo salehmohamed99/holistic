@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require('multer');
 const router = express.Router();
-sendToWhatsapp = require("../controllers/sendToWhatsapp");
+sendToWhatsapp = require("../controller/sendToWhatsapp");
 const OrderID = require("../models/OrderIDModel");
 
 
