@@ -23,6 +23,9 @@ const OrderIDSchema = new mongoose.Schema(
         country_name_en: { type: String, default: "" },
         state: { type: String, default: "" },
         state_name: { type: String, default: "" },
+        area: { type: String, default: "" },
+        area_name: { type: String, default: "" },
+        area_delivery_charge: { type: String, default: "" },
         street: { type: String, default: "" },
       }
     ],

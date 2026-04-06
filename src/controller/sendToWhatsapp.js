@@ -162,7 +162,93 @@ exports.sendToWhatsapp = async (inputData) => {
               type: "reply",
               reply: {
                 id: "2",
-                title: "تصفح الأقسام",
+                title: "الطلب عبر الواتساب",
+              },
+            },
+            {
+              type: "reply",
+              reply: {
+                id: "3",
+                title: "الطلب عبر الموقع",
+              },
+            },
+            {
+              type: "reply",
+              reply: {
+                id: "1",
+                title: "المزيد من الخدمات",
+              },
+            },
+          ],
+        },
+      };
+    }
+    else {
+      data.interactive = {
+        type: "button",
+        body: {
+          text: "Choose the service you want",
+        },
+        action: {
+          buttons: [
+            {
+              type: "reply",
+              reply: {
+                id: "2",
+                title: "Order via WhatsApp",
+              },
+            },
+            {
+              type: "reply",
+              reply: {
+                id: "3",
+                title: "Order via Website",
+              },
+            },
+            {
+
+              type: "reply",
+              reply: {
+                id: "1",
+                title: "More services",
+              },
+            },
+          ],
+        },
+      };
+    }
+
+
+    console.log({ data }, "teeeeeeeeeeeeeeest");
+    try {
+      const wa_res = await axiosHelper.post(url, data);
+      console.log("000000", {
+        wa_res: wa_res.data.messages[0],
+      });
+    } catch (err) {
+      console.log({ err });
+    }
+    // });
+    // });
+  } else if (inputData.type === "more_service") {
+    let hispeed = await OrderID.findOne({ from: inputData.phone_number });
+
+    data.type = "interactive";
+    data.recipient_type = "individual";
+    data.to = inputData.to;
+    if (hispeed.language === 'ar') {
+      data.interactive = {
+        type: "button",
+        body: {
+          text: "قم بإختيار الخدمة التى تريدها",
+        },
+        action: {
+          buttons: [
+            {
+              type: "reply",
+              reply: {
+                id: "2",
+                title: "حساب الانستغرام",
               },
             },
             {
@@ -188,7 +274,7 @@ exports.sendToWhatsapp = async (inputData) => {
               type: "reply",
               reply: {
                 id: "2",
-                title: "Browse categories",
+                title: "Instagram account",
               },
             },
             {
@@ -1559,9 +1645,16 @@ exports.sendToWhatsapp = async (inputData) => {
       from: "00",
       to: inputData.phone_number,
       phone_number: inputData.phone_number,
-      type: "address_option",
+      type: "regions",
     };
     await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+    // const wellcomeData = {
+    //   from: "00",
+    //   to: inputData.phone_number,
+    //   phone_number: inputData.phone_number,
+    //   type: "address_option",
+    // };
+    // await sendToWhatsapp.sendToWhatsapp(wellcomeData);
 
   } else if (inputData.type === "choose_address") {
     let hispeed = await OrderID.findOne({ from: inputData.phone_number });
@@ -1703,7 +1796,14 @@ exports.sendToWhatsapp = async (inputData) => {
           }
         }
 
-        const chargeValue = selectedCity?.delivery_charge ?? selectedState?.delivery_charge ?? 0;
+        let selectedArea = null;
+        const selectedAreaId = parseInt(address.area);
+        if (selectedCity && !Number.isNaN(selectedAreaId)) {
+          const areas = Array.isArray(selectedCity.areas) ? selectedCity.areas : [];
+          selectedArea = areas.find((area) => area.id === selectedAreaId) || null;
+        }
+
+        const chargeValue = selectedArea?.delivery_charge ?? selectedCity?.delivery_charge ?? selectedState?.delivery_charge ?? 0;
         const parsedCharge = Number.parseFloat(chargeValue);
 
         if (Number.isNaN(parsedCharge)) {
@@ -2443,6 +2543,326 @@ exports.sendToWhatsapp = async (inputData) => {
     }
 
     // });
+  } else if (inputData.type === "change_status") {
+    let components = [];
+    data.type = "template";
+    data.recipient_type = "individual";
+    data.to = inputData.to;
+
+    data.template = {
+      name: "flow_change_status",
+      language: {
+        code: "ar",
+      },
+      components: [
+        {
+          type: "header",
+          parameters: [
+            {
+              type: "text",
+              text: inputData.order_id,
+            },
+          ],
+        },
+        {
+          type: "body",
+          parameters: [
+            {
+              type: "text",
+              text: inputData.name,
+            },
+            {
+              type: "text",
+              text: inputData.status,
+            },
+          ],
+        },
+      ],
+    };
+
+    console.log({
+      data,
+    });
+    try {
+      const wa_res = await axiosHelper.post(url, data);
+      console.log("000000", {
+        wa_res: wa_res.data.messages[0],
+      });
+    } catch (err) {
+      console.log({ err });
+    }
+
+    // });
+  } else if (inputData.type === "regions") {
+    let hispeed = await OrderID.findOne({ from: inputData.phone_number });
+    let regions = [];
+    const currentAddress = hispeed.addresses.find(
+      (address) => `${address.id}` === `${inputData.address_id || hispeed.choosen_address}`
+    );
+    const selectedGovernorateId = parseInt(inputData.country || currentAddress?.country);
+    const selectedCityId = parseInt(inputData.state || inputData.city || currentAddress?.state);
+    let selectedGovernorate = null;
+    let selectedCity = null;
+
+    let config2 = {
+      method: 'get',
+      maxBodyLength: Infinity,
+      url: 'https://hispeed.om/api/whatsapp/shipping-locations',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    };
+
+
+    await axios.request(config2)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        const apiData = Array.isArray(response.data) ? response.data : [];
+
+        for (let i = 0; i < apiData.length; i++) {
+          const location = apiData[i];
+          const states = Array.isArray(location.states) ? location.states : [];
+
+          const governorate = states.find((state) => state.id === selectedGovernorateId);
+          if (!governorate) {
+            continue;
+          }
+
+          selectedGovernorate = governorate;
+          const cities = Array.isArray(governorate.cities) ? governorate.cities : [];
+          selectedCity = cities.find((city) => city.id === selectedCityId) || null;
+          break;
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
+    if (currentAddress && selectedGovernorate) {
+      currentAddress.country = `${selectedGovernorate.id}`;
+      currentAddress.country_name_ar = selectedGovernorate.name_ar || currentAddress.country_name_ar;
+      currentAddress.country_name_en = selectedGovernorate.name || selectedGovernorate.name_en || currentAddress.country_name_en;
+    }
+
+    if (currentAddress && selectedCity) {
+      currentAddress.state = `${selectedCity.id}`;
+      if (hispeed.language === 'ar') {
+        currentAddress.state_name = selectedCity.name_ar || selectedCity.name || currentAddress.state_name;
+      }
+      else {
+        currentAddress.state_name = selectedCity.name || selectedCity.name_en || selectedCity.name_ar || currentAddress.state_name;
+      }
+    }
+
+    if (currentAddress && (selectedGovernorate || selectedCity)) {
+      hispeed.markModified('addresses');
+      await hispeed.save();
+    }
+
+    const areas = Array.isArray(selectedCity?.areas) ? selectedCity.areas : [];
+    for (let i = 0; i < areas.length; i++) {
+      const area = areas[i];
+      const newRow = {
+        id: `${area.id}`,
+        title: hispeed.language === 'ar' ? (area.name_ar || area.name) : (area.name || area.name_ar),
+      };
+      regions.push(newRow);
+    }
+
+    if (regions.length === 0) {
+      const wellcomeData = {
+        from: "00",
+        to: inputData.phone_number,
+        phone_number: inputData.phone_number,
+        content: hispeed.language === 'ar' ? "لا توجد مناطق متاحة لهذه الولاية" : "No areas available for this state",
+        type: "text",
+      };
+      await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+      return;
+    }
+
+
+    data.type = "interactive";
+    data.recipient_type = "individual";
+    data.to = inputData.to;
+    if (hispeed.language === 'ar') {
+      data.interactive = {
+        type: "flow",
+        body: {
+          text: "قم بإختيار المنطقة",
+        },
+        action: {
+          name: "flow",
+          parameters: {
+            // mode: "draft",
+            mode: "published",
+            flow_message_version: "3",
+            flow_token: "1441148217709414",
+            flow_id: "1441148217709414",
+            flow_cta: "الولايات",
+            flow_action: "navigate",
+            flow_action_payload: {
+              screen: "regions",
+              data: {
+                regions,
+                address_id: inputData.address_id ? inputData.address_id : currentAddress.id,
+
+              },
+            },
+          },
+        },
+      };
+    }
+    else {
+      data.interactive = {
+        type: "flow",
+        body: {
+          text: "Select the area",
+        },
+        action: {
+          name: "flow",
+          parameters: {
+            // mode: "draft",
+            mode: "published",
+            flow_message_version: "3",
+            flow_token: "2311447926052133",
+            flow_id: "2311447926052133",
+            flow_cta: "States",
+            flow_action: "navigate",
+            flow_action_payload: {
+              screen: "regions",
+              data: {
+                regions,
+                address_id: inputData.address_id ? inputData.address_id : currentAddress.id,
+              },
+            },
+          },
+        },
+      };
+    }
+
+
+    console.log({ data }, "teeeeeeeeeeeeeeest");
+    try {
+      const wa_res = await axiosHelper.post(url, data);
+      console.log("000000", {
+        wa_res: wa_res.data.messages[0],
+      });
+    } catch (err) {
+      console.log({ err });
+    }
+  } else if (inputData.type === "save_region") {
+    let hispeed = await OrderID.findOne({ from: inputData.phone_number });
+    let apiData = [];
+
+
+    let config2 = {
+      method: 'get',
+      maxBodyLength: Infinity,
+      url: 'https://hispeed.om/api/whatsapp/shipping-locations',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    };
+
+
+    await axios.request(config2)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+        apiData = Array.isArray(response.data) ? response.data : [];
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
+    const currentAddress = hispeed.addresses.find(
+      (address) => `${address.id}` === `${inputData.address_id || hispeed.choosen_address}`
+    );
+    const selectedGovernorateId = parseInt(inputData.country || currentAddress?.country);
+    const selectedCityId = parseInt(inputData.state || inputData.city || currentAddress?.state);
+    const selectedAreaId = parseInt(inputData.region || inputData.regions || inputData.area || inputData.state);
+
+    let selectedGovernorate = null;
+    let selectedCity = null;
+    let selectedArea = null;
+
+    for (let i = 0; i < apiData.length; i++) {
+      const country = apiData[i];
+      const states = Array.isArray(country.states) ? country.states : [];
+
+      for (let j = 0; j < states.length; j++) {
+        const state = states[j];
+        if (state.id === selectedGovernorateId) {
+          selectedGovernorate = state;
+          const cities = Array.isArray(state.cities) ? state.cities : [];
+          selectedCity = cities.find((city) => city.id === selectedCityId) || null;
+          const areas = Array.isArray(selectedCity?.areas) ? selectedCity.areas : [];
+          selectedArea = areas.find((area) => area.id === selectedAreaId) || null;
+          break;
+        }
+      }
+
+      if (selectedGovernorate) break;
+    }
+
+    for (let index = 0; index < hispeed.addresses.length; index++) {
+      const element = hispeed.addresses[index];
+      if (`${element.id}` === `${inputData.address_id || hispeed.choosen_address}`) {
+        if (selectedGovernorate) {
+          element.country = `${selectedGovernorate.id}`;
+          element.country_name_ar = selectedGovernorate.name_ar || element.country_name_ar;
+          element.country_name_en = selectedGovernorate.name || selectedGovernorate.name_en || element.country_name_en;
+        }
+
+        if (selectedCity) {
+          element.state = `${selectedCity.id}`;
+          if (hispeed.language === 'ar') {
+            element.state_name = selectedCity.name_ar || selectedCity.name || element.state_name;
+          }
+          else {
+            element.state_name = selectedCity.name || selectedCity.name_en || selectedCity.name_ar || element.state_name;
+          }
+        }
+
+        if (selectedArea) {
+          element.area = `${selectedArea.id}`;
+          if (hispeed.language === 'ar') {
+            element.area_name = selectedArea.name_ar || selectedArea.name || element.area_name;
+          }
+          else {
+            element.area_name = selectedArea.name || selectedArea.name_ar || element.area_name;
+          }
+
+          const parsedAreaCharge = Number.parseFloat(selectedArea.delivery_charge ?? "0");
+          if (!Number.isNaN(parsedAreaCharge)) {
+            element.area_delivery_charge = parsedAreaCharge.toFixed(3);
+            hispeed.delivery_price = parsedAreaCharge.toFixed(3);
+          }
+        }
+
+        hispeed.markModified('addresses');
+        await hispeed.save();
+        break;
+      }
+    }
+
+    // const wellcomeData = {
+    //   from: "00",
+    //   to: inputData.phone_number,
+    //   phone_number: inputData.phone_number,
+    //   type: "regions",
+    // };
+    // await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+    const wellcomeData = {
+      from: "00",
+      to: inputData.phone_number,
+      phone_number: inputData.phone_number,
+      type: "address_option",
+    };
+    await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+
   }
 
 

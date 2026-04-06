@@ -462,14 +462,54 @@ exports.postHandler = async (req, res) => {
                 await sendToWhatsapp.sendToWhatsapp(wellcomeData2);
               }
             } else if (
-              title == "تصفح الأقسام" ||
-              title == "Browse categories"
+              title == "الطلب عبر الواتساب" ||
+              title == "Order via WhatsApp"
             ) {
               const wellcomeData = {
                 from: "00",
                 to: from,
                 phone_number: from,
                 type: "sign_in_flow",
+              };
+              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+            } else if (
+              title == "المزيد من الخدمات" ||
+              title == "More services"
+            ) {
+              const wellcomeData = {
+                from: "00",
+                to: from,
+                phone_number: from,
+                type: "more_service",
+              };
+              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+            }
+            else if (
+              title == "الطلب عبر الموقع" ||
+              title == "Order via Website"
+            ) {
+              const wellcomeData = {
+                from: "00",
+                to: from,
+                phone_number: from,
+                content: hispeed.language === "ar"
+                  ? "يمكنك الطلب من خلال الموقع \n https://hispeed.om \n هل تريد فتح الموقع الأن ؟"
+                  : "You can order through the website \n https://hispeed.om \n Do you want to open the website now ?",
+                type: "text",
+              };
+              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+            } else if (
+              title == "حساب الانستغرام" ||
+              title == "Instagram account"
+            ) {
+              const wellcomeData = {
+                from: "00",
+                to: from,
+                phone_number: from,
+                content: hispeed.language === "ar" ?
+                  "يمكنك متابعة حسابنا على الانستغرام \n https://www.instagram.com/hispeed.om "
+                  : "You can follow our Instagram account \n https://www.instagram.com/hispeed.om ",
+                type: "text",
               };
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             }
@@ -919,6 +959,32 @@ exports.postHandler = async (req, res) => {
                 country: country,
                 address_id: response_json.address_id,
                 type: "save_state",
+              };
+              await sendToWhatsapp.sendToWhatsapp(wellcomeData);
+            } else if (
+              response_json.flow_token === "1441148217709414" ||
+              response_json.flow_token === "2311447926052133"
+            ) {
+              let country = "";
+              let state = "";
+              for (let index = 0; index < hispeed.addresses.length; index++) {
+                const element = hispeed.addresses[index];
+                if (`${element.id}` === `${response_json.address_id}`) {
+                  country = element.country;
+                  state = element.state;
+                  break;
+                }
+              }
+
+              const wellcomeData = {
+                from: "00",
+                to: from,
+                phone_number: from,
+                country,
+                state,
+                region: response_json.regions || response_json.region || response_json.states,
+                address_id: response_json.address_id,
+                type: "save_region",
               };
               await sendToWhatsapp.sendToWhatsapp(wellcomeData);
             } else if (
